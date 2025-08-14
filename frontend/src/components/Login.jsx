@@ -23,7 +23,8 @@ const Login = () => {
 
   const [formData, setFormData] = useState({
     email: '',
-    password: ''
+    password: '',
+    role:role
   });
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
@@ -32,7 +33,8 @@ const Login = () => {
     const { name, value } = e.target;
     setFormData(prevState => ({
       ...prevState,
-      [name]: value
+      [name]: value,
+      role
     }));
   };
 
@@ -42,13 +44,17 @@ const Login = () => {
     setIsLoading(true);
     try {
         const response = await axios.post('http://localhost:5000/api/auth/login', formData);
-        
-        // Store the token and user data in localStorage
+       
+         if (response.data.user.role !== role) {
+      alert(`You are not authorized to login as ${role}.`);
+      setIsLoading(false);
+      return;
+    }
         localStorage.setItem('token', response.data.token);
         localStorage.setItem('user', JSON.stringify(response.data.user));
-
+        
         // Redirect based on role
-        const { role } = response.data.user;
+        // const { role } = response.data.user;
         switch(role) {
             case 'admin':
                 navigate('/admin-dashboard');

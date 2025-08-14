@@ -15,7 +15,7 @@ async function generateHash() {
         
         // Print SQL command
         console.log('\nSQL command to update user:');
-        console.log(`UPDATE users SET password='${hash}' WHERE email='22it106@charusat.edu.in';`);
+        console.log(`UPDATE users SET password='${hash}' WHERE email='22dce116@charusat.edu.in';`);
     } catch (err) {
         console.error('Error:', err);
     }
