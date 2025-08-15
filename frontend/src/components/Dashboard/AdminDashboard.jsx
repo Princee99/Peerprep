@@ -1,6 +1,25 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import '../../styles/AdminDashboard.css';
+import { motion, AnimatePresence } from 'framer-motion';
+import {
+  Search,
+  Plus,
+  Building2,
+  MapPin,
+  Globe,
+  MoreHorizontal,
+  Edit,
+  Trash2,
+  X,
+  User,
+  LogOut,
+  TrendingUp,
+  Users,
+  Star,
+  Target,
+  Settings,
+  Filter
+} from 'lucide-react';
 
 const AdminDashboard = () => {
   const navigate = useNavigate();
@@ -10,13 +29,13 @@ const AdminDashboard = () => {
   const [showAddCompany, setShowAddCompany] = useState(false);
   const [companies, setCompanies] = useState([]);
   const [isAddingCompany, setIsAddingCompany] = useState(false);
+  const [showUserDropdown, setShowUserDropdown] = useState(false);
 
   // Add Company Form State
   const [newCompany, setNewCompany] = useState({
     name: '',
     location: '',
     website: '',
-    // description: '',
     logo: ''
   });
 
@@ -37,7 +56,6 @@ const AdminDashboard = () => {
   const fetchCompanies = async () => {
     try {
       const token = localStorage.getItem('token');
-      console.log('Fetching companies with token:', token ? 'Token exists' : 'No token');
       
       const response = await fetch('http://localhost:5000/api/companies', {
         headers: {
@@ -46,23 +64,14 @@ const AdminDashboard = () => {
         }
       });
       
-      console.log('Response status:', response.status);
-      console.log('Response ok:', response.ok);
-      
       if (response.ok) {
         const data = await response.json();
-        console.log('Companies data received:', data);
-        console.log('Number of companies:', data.length);
         setCompanies(data);
       } else {
-        const errorData = await response.text();
-        console.error('Failed to fetch companies. Status:', response.status, 'Error:', errorData);
         setCompanies([]);
       }
     } catch (error) {
       console.error('Error fetching companies:', error);
-      console.error('Error details:', error.message);
-      // For now, use empty array if API is not available
       setCompanies([]);
     } finally {
       setIsLoading(false);
@@ -89,14 +98,12 @@ const AdminDashboard = () => {
         formData.append('name', newCompany.name);
         formData.append('location', newCompany.location);
         formData.append('website', newCompany.website);
-        // formData.append('description', newCompany.description);
         if (newCompany.logo) formData.append('logo', newCompany.logo);
 
         const response = await fetch('http://localhost:5000/api/companies', {
           method: 'POST',
           headers: {
             'Authorization': `Bearer ${token}`
-            // Do NOT set Content-Type for FormData; browser will set it
           },
           body: formData
         });
@@ -129,258 +136,540 @@ const AdminDashboard = () => {
     company.location.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
+  // Stats data
+  const stats = [
+    {
+      title: 'Total Companies',
+      value: companies.length.toString(),
+      change: '+12%',
+      changeType: 'positive',
+      icon: Building2,
+      color: 'blue'
+    },
+    {
+      title: 'Active Reviews',
+      value: '284',
+      change: '+5%',
+      changeType: 'positive',
+      icon: Star,
+      color: 'yellow'
+    },
+    {
+      title: 'Student Participation',
+      value: '1,247',
+      change: '+18%',
+      changeType: 'positive',
+      icon: Users,
+      color: 'green'
+    },
+    {
+      title: 'Success Rate',
+      value: '78%',
+      change: '+3%',
+      changeType: 'positive',
+      icon: Target,
+      color: 'purple'
+    }
+  ];
+
+  const getStatColor = (color) => {
+    const colors = {
+      blue: 'bg-blue-50 text-blue-600',
+      yellow: 'bg-yellow-50 text-yellow-600',
+      green: 'bg-green-50 text-green-600',
+      purple: 'bg-purple-50 text-purple-600'
+    };
+    return colors[color] || colors.yellow;
+  };
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="flex flex-col items-center space-y-4">
+          <motion.div
+            animate={{ rotate: 360 }}
+            transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+            className="w-12 h-12 border-4 border-blue-200 border-t-blue-600 rounded-full"
+          />
+          <p className="text-gray-600">Loading dashboard...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div className="admin-dashboard">
-      {isLoading && (
-        <div className="small-loading-indicator">
-          <div className="loading-spinner"></div>
-        </div>
-      )}
-      {/* Header */}
-      <header className="admin-header">
-        <div className="header-left">
-          <h1 className="dashboard-title">
-            <span className="admin-icon">👨‍💼</span>
-            Admin Dashboard
-          </h1>
-          <p className="welcome-text">Welcome back, {user?.name || 'Administrator'}</p>
-        </div>
-        <div className="header-right">
-          <div className="user-info">
-            <span className="user-avatar">👨‍💼</span>
-            <span className="user-name">{user?.name || 'Admin'}</span>
+    <div className="min-h-screen bg-gray-50 transition-colors duration-200">
+      {/* Sticky Header */}
+      <motion.header
+        initial={{ y: -100 }}
+        animate={{ y: 0 }}
+        className="sticky top-0 z-50 bg-white border-b border-gray-200 shadow-sm"
+      >
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between items-center h-16">
+            {/* Logo and Brand */}
+            <div className="flex items-center space-x-4">
+              <motion.div
+                whileHover={{ scale: 1.05 }}
+                className="flex items-center space-x-3"
+              >
+                <div className="w-10 h-10 bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl flex items-center justify-center">
+                  <Building2 className="w-6 h-6 text-white" />
+                </div>
+                <div className="hidden sm:block">
+                  <h1 className="text-xl font-bold text-gray-900">CHARUSAT</h1>
+                  <p className="text-xs text-gray-500">Admin Portal</p>
+                </div>
+              </motion.div>
+            </div>
+
+            {/* Right Side Actions */}
+            <div className="flex items-center space-x-4">
+              {/* User Dropdown */}
+              <div className="relative">
+                <motion.button
+                  whileHover={{ scale: 1.02 }}
+                  onClick={() => setShowUserDropdown(!showUserDropdown)}
+                  className="flex items-center space-x-3 p-2 rounded-lg hover:bg-gray-100 transition-colors"
+                >
+                  <div className="w-8 h-8 bg-gradient-to-r from-blue-600 to-purple-600 rounded-full flex items-center justify-center">
+                    <span className="text-white text-sm font-semibold">
+                      {user?.name?.charAt(0) || 'A'}
+                    </span>
+                  </div>
+                  <div className="hidden sm:block text-left">
+                    <p className="text-sm font-medium text-gray-900">
+                      {user?.name || 'Administrator'}
+                    </p>
+                    <p className="text-xs text-gray-500">Admin</p>
+                  </div>
+                </motion.button>
+
+                <AnimatePresence>
+                  {showUserDropdown && (
+                    <motion.div
+                      initial={{ opacity: 0, scale: 0.95, y: -10 }}
+                      animate={{ opacity: 1, scale: 1, y: 0 }}
+                      exit={{ opacity: 0, scale: 0.95, y: -10 }}
+                      className="absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-lg border border-gray-200 py-2"
+                    >
+                      <button
+                        onClick={() => navigate('/profile')}
+                        className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
+                      >
+                        <User className="w-4 h-4 mr-3" />
+                        Profile
+                      </button>
+                      <button
+                        onClick={() => setShowUserDropdown(false)}
+                        className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
+                      >
+                        <Settings className="w-4 h-4 mr-3" />
+                        Settings
+                      </button>
+                      <hr className="my-2 border-gray-200" />
+                      <button
+                        onClick={handleLogout}
+                        className="flex items-center w-full px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors"
+                      >
+                        <LogOut className="w-4 h-4 mr-3" />
+                        Logout
+                      </button>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+            </div>
           </div>
-          <button className="profile-btn" onClick={() => navigate('/profile')}>
-            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-            </svg>
-            Profile
-          </button>
-          <button className="logout-btn" onClick={handleLogout}>
-            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-            </svg>
-            Logout
-          </button>
         </div>
-      </header>
+      </motion.header>
 
       {/* Main Content */}
-      <main className="admin-main">
-        <div className="search-section">
-          <h2 className="section-title">Manage Companies</h2>
-          <p className="section-subtitle">Search and manage companies in the platform</p>
-          
-          <div className="search-container">
-            <div className="search-input-wrapper">
-              <svg className="search-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-              </svg>
-              <input
-                type="text"
-                placeholder="Search companies by name or location..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="search-input"
-              />
-            </div>
-            <button 
-              className="add-company-btn"
-              onClick={() => setShowAddCompany(true)}
-            >
-              <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-              </svg>
-              Add Company
-            </button>
-          </div>
-        </div>
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Welcome Section */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="mb-8"
+        >
+          <h2 className="text-3xl font-bold text-gray-900 mb-2">
+            Welcome back, {user?.name || 'Administrator'}
+          </h2>
+          <p className="text-gray-600">
+            Manage placement companies and track student progress from your dashboard.
+          </p>
+        </motion.div>
 
-        {/* Companies Grid */}
-        <div className="companies-section">
-          <div className="companies-header">
-            <h3 className="companies-title">
-              {searchTerm ? `Search Results (${filteredCompanies.length})` : `All Companies (${companies.length})`}
-            </h3>
-            <p className="companies-subtitle">
-              Click on a company to view and manage details
-            </p>
-          </div>
-
-          <div className="companies-grid">
-            {filteredCompanies.map((company) => (
-              <div 
-                key={company.id} 
-                className="company-card"
-                onClick={() => handleCompanyClick(company.company_id)}
+        {/* Stats Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+          {stats.map((stat, index) => {
+            const IconComponent = stat.icon;
+            return (
+              <motion.div
+                key={stat.title}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6, delay: index * 0.1 }}
+                whileHover={{ scale: 1.02, y: -5 }}
+                className="bg-white rounded-2xl border border-gray-200 p-6 shadow-sm hover:shadow-lg transition-all duration-200"
               >
-                {/* <div className="company-logo">
-                  <span className="logo-text">{company.name.charAt(0)}</span>
-                </div> */}
-
-                  <div className="company-logo">
-                            {company.logo_url ? (
-                <img
-                  src={`http://localhost:5000${company.logo_url}`}
-                  alt={company.name}
-                  className="logo-img"
-                />
-              ) : (
-                <span className="logo-text">{company.name.charAt(0)}</span>
-              )}
-              </div>
-                
-                <div className="company-content">
-                  <h4 className="company-name">{company.name}</h4>
-                  <p className="company-location">
-                    <svg className="location-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                    </svg>
-                    {company.location}
-                  </p>
-                  <p className="company-website">
-                    <svg className="website-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9v-9m0-9v9" />
-                    </svg>
-                    {company.website}
-                  </p>
-                  {/* <p className="company-description">{company.description}</p> */}
-                  <div className="company-actions">
-                    <span className="view-details">View Details →</span>
+                <div className="flex items-center justify-between mb-4">
+                  <div className={`p-3 rounded-xl ${getStatColor(stat.color)}`}>
+                    <IconComponent className="w-6 h-6" />
+                  </div>
+                  <div className="flex items-center text-sm">
+                    <TrendingUp className="w-4 h-4 text-green-500 mr-1" />
+                    <span className="text-green-600 font-medium">
+                      {stat.change}
+                    </span>
                   </div>
                 </div>
+                <div>
+                  <p className="text-2xl font-bold text-gray-900 mb-1">
+                    {stat.value}
+                  </p>
+                  <p className="text-sm text-gray-600">{stat.title}</p>
+                </div>
+              </motion.div>
+            );
+          })}
+        </div>
+
+        {/* Companies Management Section */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.4 }}
+          className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden"
+        >
+          {/* Section Header */}
+          <div className="px-6 py-5 border-b border-gray-200">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+              <div>
+                <h3 className="text-xl font-semibold text-gray-900">
+                  Companies Management
+                </h3>
+                <p className="text-sm text-gray-600 mt-1">
+                  Manage placement partner companies and their details
+                </p>
               </div>
-            ))}
+              <motion.button
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                onClick={() => setShowAddCompany(true)}
+                className="inline-flex items-center px-4 py-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white text-sm font-medium rounded-xl hover:from-blue-700 hover:to-purple-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-all duration-200 shadow-lg"
+              >
+                <Plus className="w-4 h-4 mr-2" />
+                Add Company
+              </motion.button>
+            </div>
           </div>
 
-          {filteredCompanies.length === 0 && searchTerm && (
-            <div className="no-results">
-              <div className="no-results-icon">🔍</div>
-              <h3>No companies found</h3>
-              <p>Try adjusting your search terms or add a new company</p>
-              <button 
-                className="clear-search-btn"
-                onClick={() => setSearchTerm('')}
+          {/* Search and Filters */}
+          <div className="px-6 py-4 border-b border-gray-200 bg-gray-50">
+            <div className="flex flex-col sm:flex-row gap-4">
+              <div className="flex-1 relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+                <input
+                  type="text"
+                  placeholder="Search companies by name or location..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="w-full pl-10 pr-4 py-2.5 bg-white border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 text-gray-900 placeholder-gray-500"
+                />
+              </div>
+              <motion.button
+                whileHover={{ scale: 1.02 }}
+                className="inline-flex items-center px-4 py-2.5 bg-white border border-gray-300 text-gray-700 text-sm font-medium rounded-xl hover:bg-gray-50 transition-colors"
               >
-                Clear Search
-              </button>
+                <Filter className="w-4 h-4 mr-2" />
+                Filter
+              </motion.button>
             </div>
-          )}
+          </div>
 
-          {companies.length === 0 && !searchTerm && (
-            <div className="no-results">
-              <div className="no-results-icon">🏢</div>
-              <h3>No companies yet</h3>
-              <p>Start by adding your first company to the platform</p>
-              <button 
-                className="clear-search-btn"
-                onClick={() => setShowAddCompany(true)}
-              >
-                Add First Company
-              </button>
-            </div>
-          )}
-        </div>
+          {/* Companies Grid */}
+          <div className="p-6">
+            {filteredCompanies.length > 0 ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {filteredCompanies.map((company, index) => (
+                  <motion.div
+                    key={company.company_id}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.3, delay: index * 0.05 }}
+                    whileHover={{ scale: 1.02, y: -5 }}
+                    onClick={() => handleCompanyClick(company.company_id)}
+                    className="bg-white rounded-xl border border-gray-200 p-6 hover:shadow-lg hover:border-blue-300 transition-all duration-200 cursor-pointer group"
+                  >
+                    <div className="flex items-start space-x-4">
+                      <div className="flex-shrink-0">
+                        {company.logo_url ? (
+                          <img
+                            src={`http://localhost:5000${company.logo_url}`}
+                            alt={company.name}
+                            className="w-12 h-12 rounded-xl object-cover"
+                          />
+                        ) : (
+                          <div className="w-12 h-12 bg-gradient-to-r from-blue-500 to-purple-600 rounded-xl flex items-center justify-center">
+                            <span className="text-white font-semibold text-lg">
+                              {company.name.charAt(0)}
+                            </span>
+                          </div>
+                        )}
+                      </div>
+                      
+                      <div className="flex-1 min-w-0">
+                        <h4 className="text-lg font-semibold text-gray-900 group-hover:text-blue-600 transition-colors">
+                          {company.name}
+                        </h4>
+                        
+                        <div className="flex items-center mt-2 text-sm text-gray-600">
+                          <MapPin className="w-4 h-4 mr-1 flex-shrink-0" />
+                          <span className="truncate">{company.location}</span>
+                        </div>
+                        
+                        <div className="flex items-center mt-1 text-sm text-gray-600">
+                          <Globe className="w-4 h-4 mr-1 flex-shrink-0" />
+                          <a 
+                            href={company.website} 
+                            target="_blank" 
+                            rel="noopener noreferrer"
+                            className="truncate hover:text-blue-600 transition-colors"
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            {company.website}
+                          </a>
+                        </div>
+                      </div>
+
+                      <div className="opacity-0 group-hover:opacity-100 transition-opacity">
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            // Handle more options
+                          }}
+                          className="p-2 rounded-lg hover:bg-gray-100 transition-colors"
+                        >
+                          <MoreHorizontal className="w-4 h-4 text-gray-500" />
+                        </button>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center justify-between mt-4 pt-4 border-t border-gray-200">
+                      <span className="text-sm text-blue-600 font-medium opacity-0 group-hover:opacity-100 transition-all duration-200">
+                        View Details →
+                      </span>
+                      <div className="flex space-x-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <motion.button
+                          whileHover={{ scale: 1.1 }}
+                          whileTap={{ scale: 0.9 }}
+                          className="p-1.5 rounded-lg bg-blue-100 text-blue-600 hover:bg-blue-200 transition-colors"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            // Handle edit
+                          }}
+                        >
+                          <Edit className="w-3.5 h-3.5" />
+                        </motion.button>
+                        <motion.button
+                          whileHover={{ scale: 1.1 }}
+                          whileTap={{ scale: 0.9 }}
+                          className="p-1.5 rounded-lg bg-red-100 text-red-600 hover:bg-red-200 transition-colors"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            // Handle delete
+                          }}
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </motion.button>
+                      </div>
+                    </div>
+                  </motion.div>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-12">
+                <div className="w-16 h-16 mx-auto mb-4 bg-gray-100 rounded-2xl flex items-center justify-center">
+                  <Building2 className="w-8 h-8 text-gray-400" />
+                </div>
+                <h3 className="text-lg font-medium text-gray-900 mb-2">
+                  {searchTerm ? 'No companies found' : 'No companies yet'}
+                </h3>
+                <p className="text-gray-600 mb-6">
+                  {searchTerm 
+                    ? 'Try adjusting your search terms or add a new company'
+                    : 'Start by adding your first company to the platform'
+                  }
+                </p>
+                {searchTerm ? (
+                  <motion.button
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    onClick={() => setSearchTerm('')}
+                    className="inline-flex items-center px-4 py-2 bg-gray-100 text-gray-700 text-sm font-medium rounded-xl hover:bg-gray-200 transition-colors"
+                  >
+                    Clear Search
+                  </motion.button>
+                ) : (
+                  <motion.button
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    onClick={() => setShowAddCompany(true)}
+                    className="inline-flex items-center px-6 py-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white text-sm font-medium rounded-xl hover:from-blue-700 hover:to-purple-700 transition-all duration-200 shadow-lg"
+                  >
+                    <Plus className="w-4 h-4 mr-2" />
+                    Add First Company
+                  </motion.button>
+                )}
+              </div>
+            )}
+          </div>
+        </motion.div>
       </main>
 
-      {/* Add Company Modal */}
-      {showAddCompany && (
-        <div className="modal-overlay" onClick={() => setShowAddCompany(false)}>
-          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-            <div className="modal-header">
-              <h2>Add New Company</h2>
-              <button 
-                className="modal-close"
-                onClick={() => setShowAddCompany(false)}
-              >
-                ×
-              </button>
-            </div>
-            <form onSubmit={handleAddCompany} className="add-company-form">
-              <div className="form-group">
-                <label htmlFor="name">Company Name *</label>
-                <input
-                  type="text"
-                  id="name"
-                  name="name"
-                  value={newCompany.name}
-                  onChange={handleInputChange}
-                  required
-                  placeholder="Enter company name"
-                  disabled={isAddingCompany}
-                />
-              </div>
-              <div className="form-group">
-                <label htmlFor="location">Location *</label>
-                <input
-                  type="text"
-                  id="location"
-                  name="location"
-                  value={newCompany.location}
-                  onChange={handleInputChange}
-                  required
-                  placeholder="Enter company location"
-                  disabled={isAddingCompany}
-                />
-              </div>
-              <div className="form-group">
-                <label htmlFor="website">Website *</label>
-                <input
-                  type="url"
-                  id="website"
-                  name="website"
-                  value={newCompany.website}
-                  onChange={handleInputChange}
-                  required
-                  placeholder="https://example.com"
-                  disabled={isAddingCompany}
-                />
-              </div>
-              {/* <div className="form-group">
-                <label htmlFor="description">Description</label>
-                <textarea
-                  id="description"
-                  name="description"
-                  value={newCompany.description}
-                  onChange={handleInputChange}
-                  placeholder="Enter company description"
-                  rows="3"
-                  disabled={isAddingCompany}
-                /> */}
-              {/* </div> */}
-              <div className="form-group">
-                <label htmlFor="logo">Company Logo</label>
-                <input
-                  type="file"
-                  id="logo"
-                  name="logo"
-                  accept="image/*"
-                  onChange={handleInputChange}
-                  disabled={isAddingCompany}
-                />
-              </div>
-              <div className="modal-actions">
-                <button 
-                  type="button" 
-                  className="cancel-btn"
+      {/* Add Company Dialog */}
+      <AnimatePresence>
+        {showAddCompany && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-50"
+            onClick={() => setShowAddCompany(false)}
+          >
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 20 }}
+              transition={{ type: "spring", duration: 0.3 }}
+              className="bg-white rounded-2xl shadow-2xl max-w-md w-full max-h-[90vh] overflow-y-auto border border-gray-200"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {/* Dialog Header */}
+              <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200">
+                <h3 className="text-xl font-semibold text-gray-900">
+                  Add New Company
+                </h3>
+                <motion.button
+                  whileHover={{ scale: 1.1 }}
+                  whileTap={{ scale: 0.9 }}
                   onClick={() => setShowAddCompany(false)}
-                  disabled={isAddingCompany}
+                  className="p-2 rounded-lg hover:bg-gray-100 transition-colors"
                 >
-                  Cancel
-                </button>
-                <button 
-                  type="submit" 
-                  className="submit-btn"
-                  disabled={isAddingCompany}
-                >
-                  {isAddingCompany ? 'Adding...' : 'Add Company'}
-                </button>
+                  <X className="w-5 h-5 text-gray-500" />
+                </motion.button>
               </div>
-            </form>
-          </div>
-        </div>
+
+              {/* Dialog Content */}
+              <form onSubmit={handleAddCompany} className="p-6 space-y-5">
+                <div>
+                  <label htmlFor="name" className="block text-sm font-semibold text-gray-700 mb-2">
+                    Company Name *
+                  </label>
+                  <input
+                    type="text"
+                    id="name"
+                    name="name"
+                    value={newCompany.name}
+                    onChange={handleInputChange}
+                    required
+                    placeholder="Enter company name"
+                    disabled={isAddingCompany}
+                    className="w-full px-4 py-3 bg-white border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-50 disabled:text-gray-500 transition-all duration-200 text-gray-900 placeholder-gray-500"
+                  />
+                </div>
+
+                <div>
+                  <label htmlFor="location" className="block text-sm font-semibold text-gray-700 mb-2">
+                    Location *
+                  </label>
+                  <input
+                    type="text"
+                    id="location"
+                    name="location"
+                    value={newCompany.location}
+                    onChange={handleInputChange}
+                    required
+                    placeholder="Enter company location"
+                    disabled={isAddingCompany}
+                    className="w-full px-4 py-3 bg-white border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-50 disabled:text-gray-500 transition-all duration-200 text-gray-900 placeholder-gray-500"
+                  />
+                </div>
+
+                <div>
+                  <label htmlFor="website" className="block text-sm font-semibold text-gray-700 mb-2">
+                    Website *
+                  </label>
+                  <input
+                    type="url"
+                    id="website"
+                    name="website"
+                    value={newCompany.website}
+                    onChange={handleInputChange}
+                    required
+                    placeholder="https://example.com"
+                    disabled={isAddingCompany}
+                    className="w-full px-4 py-3 bg-white border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-50 disabled:text-gray-500 transition-all duration-200 text-gray-900 placeholder-gray-500"
+                  />
+                </div>
+
+                <div>
+                  <label htmlFor="logo" className="block text-sm font-semibold text-gray-700 mb-2">
+                    Company Logo
+                  </label>
+                  <input
+                    type="file"
+                    id="logo"
+                    name="logo"
+                    accept="image/*"
+                    onChange={handleInputChange}
+                    disabled={isAddingCompany}
+                    className="w-full px-4 py-3 bg-white border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-50 disabled:text-gray-500 transition-all duration-200 text-gray-900 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:bg-blue-50 file:text-blue-600 hover:file:bg-blue-100 file:transition-colors"
+                  />
+                </div>
+
+                {/* Dialog Actions */}
+                <div className="flex justify-end space-x-3 pt-6">
+                  <motion.button
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    type="button"
+                    onClick={() => setShowAddCompany(false)}
+                    disabled={isAddingCompany}
+                    className="px-6 py-2.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-xl hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
+                  >
+                    Cancel
+                  </motion.button>
+                  <motion.button
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    type="submit"
+                    disabled={isAddingCompany}
+                    className="px-6 py-2.5 text-sm font-medium text-white bg-gradient-to-r from-blue-600 to-purple-600 border border-transparent rounded-xl hover:from-blue-700 hover:to-purple-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 flex items-center shadow-lg"
+                  >
+                    {isAddingCompany && (
+                      <motion.div
+                        animate={{ rotate: 360 }}
+                        transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                        className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full mr-2"
+                      />
+                    )}
+                    {isAddingCompany ? 'Adding...' : 'Add Company'}
+                  </motion.button>
+                </div>
+              </form>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Click outside to close dropdowns */}
+      {showUserDropdown && (
+        <div
+          className="fixed inset-0 z-40"
+          onClick={() => setShowUserDropdown(false)}
+        />
       )}
     </div>
   );

@@ -1,6 +1,33 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import '../styles/CompanyDetail.css';
+import { motion, AnimatePresence } from 'framer-motion';
+import {
+  ArrowLeft,
+  LogOut,
+  MapPin,
+  Globe,
+  Building2,
+  Star,
+  Plus,
+  MessageCircle,
+  Calendar,
+  User,
+  ThumbsUp,
+  Send,
+  BookOpen,
+  Target,
+  Users,
+  Award,
+  Clock,
+  ChevronRight,
+  ExternalLink,
+  Briefcase,
+  GraduationCap,
+  Brain,
+  Monitor,
+  UserCheck,
+  HandHeart
+} from 'lucide-react';
 
 const CompanyDetail = () => {
   const { companyId } = useParams();
@@ -9,6 +36,8 @@ const CompanyDetail = () => {
   const [activeTab, setActiveTab] = useState('overview');
   const [company, setCompany] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [showAddReview, setShowAddReview] = useState(false);
+  const [showAskQuestion, setShowAskQuestion] = useState(false);
 
   useEffect(() => {
     // Check if user is logged in
@@ -27,8 +56,6 @@ const CompanyDetail = () => {
   const fetchCompanyDetails = async () => {
     try {
       const token = localStorage.getItem('token');
-      // console.log('Fetching company details for ID:', companyId);
-      // console.log('Token exists:', !!token);
       
       const response = await fetch(`http://localhost:5000/api/companies/${companyId}`, {
         headers: {
@@ -37,37 +64,28 @@ const CompanyDetail = () => {
         }
       });
       
-      // console.log('Company detail response status:', response.status);
-      // console.log('Response headers:', response.headers);
-      
       if (response.ok) {
         const data = await response.json();
-        // console.log('Company details received:', data);
         setCompany(data);
       } else {
-        const errorData = await response.text();
-        console.error('Failed to fetch company details. Status:', response.status, 'Error:', errorData);
         // Fallback to mock data if API fails
         setCompany({
           id: companyId,
-          name: 'Company',
-          location: 'Location',
+          name: 'Tech Company',
+          location: 'Bangalore, India',
           website: 'https://example.com',
-          // description: 'Company description'
-          logo_url: 'https://example.com/logo.png'
+          logo_url: null
         });
       }
-    }  catch (error) {
+    } catch (error) {
       console.error('Error fetching company details:', error);
-      console.error('Error details:', error.message);
       // Fallback to mock data if API fails
       setCompany({
         id: companyId,
-        name: 'Company',
-        location: 'Location',
+        name: 'Tech Company',
+        location: 'Bangalore, India',
         website: 'https://example.com',
-        // description: 'Company description'
-        logo_url: 'https://example.com/logo.png'
+        logo_url: null
       });
     } finally {
       setIsLoading(false);
@@ -85,15 +103,27 @@ const CompanyDetail = () => {
   };
 
   const tabs = [
-    { id: 'overview', label: 'Overview', icon: '📋' },
-    { id: 'aptitude', label: 'Aptitude Questions', icon: '🧮' },
-    { id: 'technical', label: 'Technical Round', icon: '💻' },
-    { id: 'personal', label: 'Personal Interview', icon: '👤' },
-    { id: 'hr', label: 'HR Round', icon: '🤝' },
-    { id: 'questions', label: 'Q&A', icon: '❓' }
+    { id: 'overview', label: 'Overview', icon: BookOpen, color: 'blue' },
+    { id: 'aptitude', label: 'Aptitude Questions', icon: Brain, color: 'purple' },
+    { id: 'technical', label: 'Technical Round', icon: Monitor, color: 'green' },
+    { id: 'personal', label: 'Personal Interview', icon: UserCheck, color: 'orange' },
+    { id: 'hr', label: 'HR Round', icon: HandHeart, color: 'pink' },
+    { id: 'questions', label: 'Q&A', icon: MessageCircle, color: 'indigo' }
   ];
 
-  // Dummy reviews data (as requested)
+  const getTabColor = (color) => {
+    const colors = {
+      blue: 'text-blue-600 bg-blue-50 border-blue-200',
+      purple: 'text-purple-600 bg-purple-50 border-purple-200',
+      green: 'text-green-600 bg-green-50 border-green-200',
+      orange: 'text-orange-600 bg-orange-50 border-orange-200',
+      pink: 'text-pink-600 bg-pink-50 border-pink-200',
+      indigo: 'text-indigo-600 bg-indigo-50 border-indigo-200'
+    };
+    return colors[color] || colors.blue;
+  };
+
+  // Mock reviews data
   const mockReviews = {
     aptitude: [
       {
@@ -102,7 +132,8 @@ const CompanyDetail = () => {
         role: 'Software Engineer',
         date: '2 months ago',
         content: 'The aptitude test was quite challenging. Focus on data interpretation, logical reasoning, and basic mathematics. Time management is crucial.',
-        rating: 4
+        rating: 4,
+        helpful: 12
       }
     ],
     technical: [
@@ -112,7 +143,8 @@ const CompanyDetail = () => {
         role: 'Senior Developer',
         date: '1 month ago',
         content: 'Technical round focused on algorithms and data structures. Be prepared for coding questions on arrays, strings, and trees. They also asked about system design.',
-        rating: 5
+        rating: 5,
+        helpful: 18
       }
     ],
     personal: [
@@ -122,7 +154,8 @@ const CompanyDetail = () => {
         role: 'Product Manager',
         date: '3 weeks ago',
         content: 'Personal interview was conversational. They asked about my projects, challenges I faced, and how I solved them. Be honest and show enthusiasm.',
-        rating: 4
+        rating: 4,
+        helpful: 15
       }
     ],
     hr: [
@@ -132,12 +165,13 @@ const CompanyDetail = () => {
         role: 'Data Scientist',
         date: '2 weeks ago',
         content: 'HR round was mostly about culture fit and behavioral questions. They asked about teamwork, leadership, and why I wanted to join this company.',
-        rating: 5
+        rating: 5,
+        helpful: 20
       }
     ]
   };
 
-  // Dummy questions data
+  // Mock questions data
   const mockQuestions = [
     {
       id: 1,
@@ -149,7 +183,8 @@ const CompanyDetail = () => {
           id: 1,
           author: 'Alumni Expert',
           content: 'Usually 45-60 minutes. Be prepared for both coding and system design questions.',
-          date: '5 days ago'
+          date: '5 days ago',
+          helpful: 8
         }
       ]
     },
@@ -163,296 +198,588 @@ const CompanyDetail = () => {
           id: 2,
           author: 'Senior Dev',
           content: 'They focus on problem-solving rather than specific languages, but knowing Python, Java, or C++ helps.',
-          date: '2 days ago'
+          date: '2 days ago',
+          helpful: 5
         }
       ]
     }
   ];
 
+  const placementSteps = [
+    {
+      step: 1,
+      title: 'Online Application',
+      description: 'Submit your resume and cover letter through the company portal',
+      icon: Send,
+      color: 'blue'
+    },
+    {
+      step: 2,
+      title: 'Aptitude Test',
+      description: 'Online assessment covering logical reasoning and quantitative skills',
+      icon: Brain,
+      color: 'purple'
+    },
+    {
+      step: 3,
+      title: 'Technical Interview',
+      description: 'Coding challenges and system design discussions',
+      icon: Monitor,
+      color: 'green'
+    },
+    {
+      step: 4,
+      title: 'Personal Interview',
+      description: 'Behavioral questions and project discussions',
+      icon: UserCheck,
+      color: 'orange'
+    },
+    {
+      step: 5,
+      title: 'HR Round',
+      description: 'Final culture fit and offer discussion',
+      icon: HandHeart,
+      color: 'pink'
+    }
+  ];
+
   if (isLoading) {
     return (
-      <div className="company-detail" style={{position: 'relative'}}>
-        {isLoading && (
-          <div className="small-loading-indicator">
-            <div className="loading-spinner"></div>
-          </div>
-        )}
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 flex items-center justify-center">
+        <div className="flex flex-col items-center space-y-4">
+          <motion.div
+            animate={{ rotate: 360 }}
+            transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+            className="w-16 h-16 border-4 border-blue-200 border-t-blue-600 rounded-full"
+          />
+          <p className="text-slate-600 font-medium">Loading company details...</p>
+        </div>
       </div>
     );
   }
 
   if (!company) {
     return (
-      <div className="company-loading">
-        <div className="no-results-icon">❌</div>
-        <h3>Company not found</h3>
-        <p>The company you're looking for doesn't exist.</p>
-        <button className="clear-search-btn" onClick={handleBack}>
-          Go Back
-        </button>
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 flex items-center justify-center">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="text-center"
+        >
+          <div className="w-20 h-20 mx-auto mb-6 bg-red-100 rounded-full flex items-center justify-center">
+            <Building2 className="w-10 h-10 text-red-600" />
+          </div>
+          <h3 className="text-2xl font-bold text-slate-900 mb-4">Company not found</h3>
+          <p className="text-slate-600 mb-6">The company you're looking for doesn't exist.</p>
+          <motion.button
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+            onClick={handleBack}
+            className="px-6 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-colors"
+          >
+            Go Back
+          </motion.button>
+        </motion.div>
       </div>
     );
   }
 
   return (
-    <div className="company-detail">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100">
       {/* Header */}
-      <header className="company-header">
-        <div className="header-left">
-          <button className="back-btn" onClick={handleBack}>
-            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-            </svg>
-            Back
-          </button>
-          <div className="company-info">
-            <div className="company-logo-large">
-              {/* <span className="logo-text">{company.name.charAt(0)}</span> */}
-                {company.logo_url ? (
-    <img
-      src={`http://localhost:5000${company.logo_url}`}
-      alt={company.name}
-      className="logo-img"
-    />
-  ) : (
-    <span className="logo-text">{company.name.charAt(0)}</span>
-  )}
-            </div>
-            <div className="company-details">
-              <h1 className="company-name">{company.name}</h1>
-              <p className="company-location">
-                <svg className="location-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                </svg>
-                {company.location}
-              </p>
-              <p className="company-website">
-                <svg className="website-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9v-9m0-9v9" />
-                </svg>
-                {company.website}
-              </p>
-            </div>
-          </div>
-        </div>
-        <div className="header-right">
-          <div className="user-info">
-            <span className="user-avatar">
-              {user?.role === 'student' ? '🎓' : user?.role === 'alumni' ? '👨‍🎓' : '👨‍💼'}
-            </span>
-            <span className="user-name">{user?.name || 'User'}</span>
-          </div>
-          <button className="logout-btn" onClick={handleLogout}>
-            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-            </svg>
-            Logout
-          </button>
-        </div>
-      </header>
+      <motion.header
+        initial={{ y: -100, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        className="sticky top-0 z-50 backdrop-blur-xl bg-white/80 border-b border-white/20 shadow-lg"
+      >
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between h-20">
+            {/* Left Section */}
+            <div className="flex items-center space-x-6">
+              <motion.button
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                onClick={handleBack}
+                className="flex items-center space-x-2 px-4 py-2 text-slate-700 hover:text-slate-900 hover:bg-white/60 rounded-xl transition-all duration-200 backdrop-blur-sm"
+              >
+                <ArrowLeft className="w-5 h-5" />
+                <span className="font-medium">Back</span>
+              </motion.button>
 
-      {/* Navigation Tabs */}
-      <nav className="company-nav">
-        {tabs.map((tab) => (
-          <button
-            key={tab.id}
-            className={`nav-tab ${activeTab === tab.id ? 'active' : ''}`}
-            onClick={() => setActiveTab(tab.id)}
-          >
-            <span className="tab-icon">{tab.icon}</span>
-            {tab.label}
-          </button>
-        ))}
-      </nav>
-
-      {/* Main Content */}
-      <main className="company-main">
-        {activeTab === 'overview' && (
-          <div className="overview-content">
-            <div className="company-overview">
-              <h2 className="section-title">Company Overview</h2>
-              <div className="overview-grid">
-                <div className="overview-card">
-                  <h3>Website</h3>
-                  <a href={company.website} target="_blank" rel="noopener noreferrer">
-                    Visit Website
-                  </a>
-                </div>
-                <div className="overview-card">
-                  <h3>Location</h3>
-                  <p>{company.location}</p>
-                </div>
-                <div className="overview-card">
-                  <h3>Industry</h3>
-                  <p>Technology</p>
-                </div>
-                <div className="overview-card">
-                  <h3>Company Type</h3>
-                  <p>Private</p>
-                </div>
-              </div>
-              {/* <p className="company-description">{company.description}</p> */}
-            </div>
-
-            <div className="placement-process">
-              <h2 className="section-title">Placement Process</h2>
-              <div className="process-steps">
-                <div className="step">
-                  <div className="step-number">1</div>
-                  <div className="step-content">
-                    <h3>Online Application</h3>
-                    <p>Submit your resume and cover letter through the company portal</p>
-                  </div>
-                </div>
-                <div className="step">
-                  <div className="step-number">2</div>
-                  <div className="step-content">
-                    <h3>Aptitude Test</h3>
-                    <p>Online assessment covering logical reasoning and quantitative skills</p>
-                  </div>
-                </div>
-                <div className="step">
-                  <div className="step-number">3</div>
-                  <div className="step-content">
-                    <h3>Technical Interview</h3>
-                    <p>Coding challenges and system design discussions</p>
-                  </div>
-                </div>
-                <div className="step">
-                  <div className="step-number">4</div>
-                  <div className="step-content">
-                    <h3>Personal Interview</h3>
-                    <p>Behavioral questions and project discussions</p>
-                  </div>
-                </div>
-                <div className="step">
-                  <div className="step-number">5</div>
-                  <div className="step-content">
-                    <h3>HR Round</h3>
-                    <p>Final culture fit and offer discussion</p>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {['aptitude', 'technical', 'personal', 'hr'].includes(activeTab) && (
-          <div className="reviews-content">
-            <div className="reviews-header">
-              <h2 className="section-title">
-                {tabs.find(tab => tab.id === activeTab)?.label} Reviews
-              </h2>
-              {user?.role === 'alumni' && (
-                <button className="add-review-btn">
-                  <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                  </svg>
-                  Add Review
-                </button>
-              )}
-            </div>
-
-            <div className="reviews-list">
-              {mockReviews[activeTab]?.map((review) => (
-                <div key={review.id} className="review-card">
-                  <div className="review-header">
-                    <div className="review-author">
-                      <span className="author-avatar">👤</span>
-                      <div className="author-info">
-                        <h4 className="author-name">{review.author}</h4>
-                        <p className="author-role">{review.role}</p>
-                      </div>
+              <div className="flex items-center space-x-4">
+                {/* Company Logo */}
+                <div className="relative">
+                  {company.logo_url ? (
+                    <img
+                      src={`http://localhost:5000${company.logo_url}`}
+                      alt={company.name}
+                      className="w-16 h-16 rounded-2xl object-cover shadow-lg"
+                    />
+                  ) : (
+                    <div className="w-16 h-16 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-2xl flex items-center justify-center shadow-lg">
+                      <span className="text-white text-2xl font-bold">
+                        {company.name.charAt(0)}
+                      </span>
                     </div>
-                    <div className="review-meta">
-                      <div className="review-rating">
-                        {[...Array(5)].map((_, i) => (
-                          <span key={i} className={`star ${i < review.rating ? 'filled' : ''}`}>
-                            ⭐
-                          </span>
-                        ))}
-                      </div>
-                      <span className="review-date">{review.date}</span>
-                    </div>
-                  </div>
-                  <p className="review-content">{review.content}</p>
-                </div>
-              ))}
-
-              {(!mockReviews[activeTab] || mockReviews[activeTab].length === 0) && (
-                <div className="no-reviews">
-                  <div className="no-reviews-icon">📝</div>
-                  <h3>No reviews yet</h3>
-                  <p>Be the first to share your experience!</p>
-                </div>
-              )}
-            </div>
-          </div>
-        )}
-
-        {activeTab === 'questions' && (
-          <div className="questions-content">
-            <div className="questions-header">
-              <h2 className="section-title">Questions & Answers</h2>
-              {user?.role === 'student' && (
-                <button className="ask-question-btn">
-                  <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                  </svg>
-                  Ask Question
-                </button>
-              )}
-            </div>
-
-            <div className="questions-list">
-              {mockQuestions.map((question) => (
-                <div key={question.id} className="question-card">
-                  <div className="question-header">
-                    <div className="question-author">
-                      <span className="author-avatar">🎓</span>
-                      <span className="author-name">{question.author}</span>
-                    </div>
-                    <span className="question-date">{question.date}</span>
-                  </div>
-                  <h3 className="question-text">{question.question}</h3>
-                  
-                  <div className="answers-list">
-                    {question.answers.map((answer) => (
-                      <div key={answer.id} className="answer-card">
-                        <div className="answer-header">
-                          <div className="answer-author">
-                            <span className="author-avatar">👨‍🎓</span>
-                            <span className="author-name">{answer.author}</span>
-                          </div>
-                          <span className="answer-date">{answer.date}</span>
-                        </div>
-                        <p className="answer-content">{answer.content}</p>
-                      </div>
-                    ))}
-                  </div>
-
-                  {user?.role === 'alumni' && (
-                    <button className="answer-btn">
-                      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-                      </svg>
-                      Answer
-                    </button>
                   )}
                 </div>
-              ))}
 
-              {mockQuestions.length === 0 && (
-                <div className="no-questions">  
-                  <div className="no-questions-icon">❓</div>
-                  <h3>No questions yet</h3>
-                  <p>Be the first to ask a question!</p>
+                {/* Company Info */}
+                <div>
+                  <h1 className="text-2xl font-bold text-slate-900">{company.name}</h1>
+                  <div className="flex items-center space-x-4 text-slate-600">
+                    <div className="flex items-center space-x-1">
+                      <MapPin className="w-4 h-4" />
+                      <span className="text-sm">{company.location}</span>
+                    </div>
+                    <div className="flex items-center space-x-1">
+                      <Globe className="w-4 h-4" />
+                      <a
+                        href={company.website}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-sm hover:text-blue-600 transition-colors"
+                      >
+                        Visit Website
+                        <ExternalLink className="w-3 h-3 inline ml-1" />
+                      </a>
+                    </div>
+                  </div>
                 </div>
-              )}
+              </div>
+            </div>
+
+            {/* Right Section */}
+            <div className="flex items-center space-x-4">
+              <div className="flex items-center space-x-3 px-4 py-2 bg-white/60 backdrop-blur-sm rounded-xl">
+                <div className="w-8 h-8 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-full flex items-center justify-center">
+                  <span className="text-white text-sm font-semibold">
+                    {user?.name?.charAt(0) || 'U'}
+                  </span>
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-slate-900">{user?.name || 'User'}</p>
+                  <p className="text-xs text-slate-600 capitalize">{user?.role}</p>
+                </div>
+              </div>
+
+              <motion.button
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                onClick={handleLogout}
+                className="flex items-center space-x-2 px-4 py-2 text-red-600 hover:text-red-700 hover:bg-red-50/80 rounded-xl transition-all duration-200 backdrop-blur-sm"
+              >
+                <LogOut className="w-5 h-5" />
+                <span className="font-medium">Logout</span>
+              </motion.button>
             </div>
           </div>
-        )}
+        </div>
+      </motion.header>
+
+      {/* Navigation Tabs */}
+      <motion.nav
+        initial={{ y: 50, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        transition={{ delay: 0.1 }}
+        className="sticky top-20 z-40 backdrop-blur-xl bg-white/70 border-b border-white/20"
+      >
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex space-x-1 py-4 overflow-x-auto">
+            {tabs.map((tab) => {
+              const IconComponent = tab.icon;
+              return (
+                <motion.button
+                  key={tab.id}
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  onClick={() => setActiveTab(tab.id)}
+                  className={`flex items-center space-x-2 px-6 py-3 rounded-xl font-medium transition-all duration-200 whitespace-nowrap ${
+                    activeTab === tab.id
+                      ? `${getTabColor(tab.color)} shadow-lg`
+                      : 'text-slate-600 hover:text-slate-900 hover:bg-white/60'
+                  }`}
+                >
+                  <IconComponent className="w-5 h-5" />
+                  <span>{tab.label}</span>
+                </motion.button>
+              );
+            })}
+          </div>
+        </div>
+      </motion.nav>
+
+      {/* Main Content */}
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <AnimatePresence mode="wait">
+          {activeTab === 'overview' && (
+            <motion.div
+              key="overview"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              className="space-y-8"
+            >
+              {/* Company Overview Cards */}
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                <motion.div
+                  whileHover={{ y: -4 }}
+                  className="bg-white/70 backdrop-blur-xl rounded-2xl border border-white/20 shadow-lg p-6"
+                >
+                  <div className="flex items-center space-x-3">
+                    <div className="p-3 bg-blue-100 rounded-xl">
+                      <Globe className="w-6 h-6 text-blue-600" />
+                    </div>
+                    <div>
+                      <h3 className="font-semibold text-slate-900">Website</h3>
+                      <a
+                        href={company.website}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-sm text-blue-600 hover:text-blue-700"
+                      >
+                        Visit Site
+                      </a>
+                    </div>
+                  </div>
+                </motion.div>
+
+                <motion.div
+                  whileHover={{ y: -4 }}
+                  className="bg-white/70 backdrop-blur-xl rounded-2xl border border-white/20 shadow-lg p-6"
+                >
+                  <div className="flex items-center space-x-3">
+                    <div className="p-3 bg-green-100 rounded-xl">
+                      <MapPin className="w-6 h-6 text-green-600" />
+                    </div>
+                    <div>
+                      <h3 className="font-semibold text-slate-900">Location</h3>
+                      <p className="text-sm text-slate-600">{company.location}</p>
+                    </div>
+                  </div>
+                </motion.div>
+
+                <motion.div
+                  whileHover={{ y: -4 }}
+                  className="bg-white/70 backdrop-blur-xl rounded-2xl border border-white/20 shadow-lg p-6"
+                >
+                  <div className="flex items-center space-x-3">
+                    <div className="p-3 bg-purple-100 rounded-xl">
+                      <Briefcase className="w-6 h-6 text-purple-600" />
+                    </div>
+                    <div>
+                      <h3 className="font-semibold text-slate-900">Industry</h3>
+                      <p className="text-sm text-slate-600">Technology</p>
+                    </div>
+                  </div>
+                </motion.div>
+
+                <motion.div
+                  whileHover={{ y: -4 }}
+                  className="bg-white/70 backdrop-blur-xl rounded-2xl border border-white/20 shadow-lg p-6"
+                >
+                  <div className="flex items-center space-x-3">
+                    <div className="p-3 bg-orange-100 rounded-xl">
+                      <Building2 className="w-6 h-6 text-orange-600" />
+                    </div>
+                    <div>
+                      <h3 className="font-semibold text-slate-900">Type</h3>
+                      <p className="text-sm text-slate-600">Private</p>
+                    </div>
+                  </div>
+                </motion.div>
+              </div>
+
+              {/* Placement Process */}
+              <div className="bg-white/70 backdrop-blur-xl rounded-2xl border border-white/20 shadow-lg p-8">
+                <h2 className="text-2xl font-bold text-slate-900 mb-8 flex items-center">
+                  <Target className="w-6 h-6 mr-3 text-blue-600" />
+                  Placement Process
+                </h2>
+
+                <div className="space-y-6">
+                  {placementSteps.map((step, index) => {
+                    const IconComponent = step.icon;
+                    return (
+                      <motion.div
+                        key={step.step}
+                        initial={{ opacity: 0, x: -20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ delay: index * 0.1 }}
+                        className="flex items-start space-x-4"
+                      >
+                        <div className={`flex-shrink-0 w-12 h-12 rounded-xl flex items-center justify-center ${
+                          step.color === 'blue' ? 'bg-blue-100' :
+                          step.color === 'purple' ? 'bg-purple-100' :
+                          step.color === 'green' ? 'bg-green-100' :
+                          step.color === 'orange' ? 'bg-orange-100' :
+                          'bg-pink-100'
+                        }`}>
+                          <IconComponent className={`w-6 h-6 ${
+                            step.color === 'blue' ? 'text-blue-600' :
+                            step.color === 'purple' ? 'text-purple-600' :
+                            step.color === 'green' ? 'text-green-600' :
+                            step.color === 'orange' ? 'text-orange-600' :
+                            'text-pink-600'
+                          }`} />
+                        </div>
+                        
+                        <div className="flex-1">
+                          <div className="flex items-center space-x-2 mb-2">
+                            <span className="text-sm font-bold text-slate-500">STEP {step.step}</span>
+                          </div>
+                          <h3 className="text-lg font-semibold text-slate-900 mb-2">{step.title}</h3>
+                          <p className="text-slate-600">{step.description}</p>
+                        </div>
+
+                        {index < placementSteps.length - 1 && (
+                          <ChevronRight className="w-5 h-5 text-slate-400 mt-4" />
+                        )}
+                      </motion.div>
+                    );
+                  })}
+                </div>
+              </div>
+            </motion.div>
+          )}
+
+          {['aptitude', 'technical', 'personal', 'hr'].includes(activeTab) && (
+            <motion.div
+              key={activeTab}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              className="space-y-6"
+            >
+              {/* Header */}
+              <div className="flex items-center justify-between">
+                <h2 className="text-2xl font-bold text-slate-900 flex items-center">
+                  <Star className="w-6 h-6 mr-3 text-yellow-500" />
+                  {tabs.find(tab => tab.id === activeTab)?.label} Reviews
+                </h2>
+                
+                {user?.role === 'alumni' && (
+                  <motion.button
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    onClick={() => setShowAddReview(true)}
+                    className="flex items-center space-x-2 px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl hover:from-blue-700 hover:to-indigo-700 transition-all duration-200 shadow-lg"
+                  >
+                    <Plus className="w-5 h-5" />
+                    <span>Add Review</span>
+                  </motion.button>
+                )}
+              </div>
+
+              {/* Reviews List */}
+              <div className="space-y-4">
+                {mockReviews[activeTab]?.map((review, index) => (
+                  <motion.div
+                    key={review.id}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: index * 0.1 }}
+                    whileHover={{ y: -2 }}
+                    className="bg-white/70 backdrop-blur-xl rounded-2xl border border-white/20 shadow-lg p-6"
+                  >
+                    <div className="flex items-start justify-between mb-4">
+                      <div className="flex items-center space-x-3">
+                        <div className="w-12 h-12 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-full flex items-center justify-center">
+                          <User className="w-6 h-6 text-white" />
+                        </div>
+                        <div>
+                          <h4 className="font-semibold text-slate-900">{review.author}</h4>
+                          <p className="text-sm text-slate-600">{review.role}</p>
+                        </div>
+                      </div>
+                      
+                      <div className="text-right">
+                        <div className="flex items-center space-x-1 mb-1">
+                          {[...Array(5)].map((_, i) => (
+                            <Star
+                              key={i}c
+                              className={`w-4 h-4 ${
+                                i < review.rating ? 'text-yellow-400 fill-current' : 'text-gray-300'
+                              }`}
+                            />
+                          ))}
+                        </div>
+                        <p className="text-xs text-slate-500">{review.date}</p>
+                      </div>
+                    </div>
+                    
+                    <p className="text-slate-700 mb-4">{review.content}</p>
+                    
+                    <div className="flex items-center justify-between">
+                      <motion.button
+                        whileHover={{ scale: 1.02 }}
+                        whileTap={{ scale: 0.98 }}
+                        className="flex items-center space-x-2 text-slate-600 hover:text-blue-600 transition-colors"
+                      >
+                        <ThumbsUp className="w-4 h-4" />
+                        <span className="text-sm">Helpful ({review.helpful})</span>
+                      </motion.button>
+                    </div>
+                  </motion.div>
+                ))}
+
+                {(!mockReviews[activeTab] || mockReviews[activeTab].length === 0) && (
+                  <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    className="text-center py-12"
+                  >
+                    <div className="w-20 h-20 mx-auto mb-6 bg-gray-100 rounded-full flex items-center justify-center">
+                      <Star className="w-10 h-10 text-gray-400" />
+                    </div>
+                    <h3 className="text-xl font-semibold text-slate-900 mb-2">No reviews yet</h3>
+                    <p className="text-slate-600 mb-6">Be the first to share your experience!</p>
+                    {user?.role === 'alumni' && (
+                      <motion.button
+                        whileHover={{ scale: 1.02 }}
+                        whileTap={{ scale: 0.98 }}
+                        onClick={() => setShowAddReview(true)}
+                        className="px-6 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-colors"
+                      >
+                        Add First Review
+                      </motion.button>
+                    )}
+                  </motion.div>
+                )}
+              </div>
+            </motion.div>
+          )}
+
+          {activeTab === 'questions' && (
+            <motion.div
+              key="questions"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              className="space-y-6"
+            >
+              {/* Header */}
+              <div className="flex items-center justify-between">
+                <h2 className="text-2xl font-bold text-slate-900 flex items-center">
+                  <MessageCircle className="w-6 h-6 mr-3 text-indigo-500" />
+                  Questions & Answers
+                </h2>
+                
+                {user?.role === 'student' && (
+                  <motion.button
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    onClick={() => setShowAskQuestion(true)}
+                    className="flex items-center space-x-2 px-6 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-xl hover:from-indigo-700 hover:to-purple-700 transition-all duration-200 shadow-lg"
+                  >
+                    <Plus className="w-5 h-5" />
+                    <span>Ask Question</span>
+                  </motion.button>
+                )}
+              </div>
+
+              {/* Questions List */}
+              <div className="space-y-6">
+                {mockQuestions.map((question, index) => (
+                  <motion.div
+                    key={question.id}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: index * 0.1 }}
+                    whileHover={{ y: -2 }}
+                    className="bg-white/70 backdrop-blur-xl rounded-2xl border border-white/20 shadow-lg p-6"
+                  >
+                    {/* Question Header */}
+                    <div className="flex items-center justify-between mb-4">
+                      <div className="flex items-center space-x-3">
+                        <div className="w-10 h-10 bg-gradient-to-br from-indigo-600 to-purple-600 rounded-full flex items-center justify-center">
+                          <GraduationCap className="w-5 h-5 text-white" />
+                        </div>
+                        <div>
+                          <p className="font-medium text-slate-900">{question.author}</p>
+                          <p className="text-xs text-slate-500">{question.date}</p>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    {/* Question */}
+                    <h3 className="text-lg font-semibold text-slate-900 mb-4">{question.question}</h3>
+                    
+                    {/* Answers */}
+                    <div className="space-y-4">
+                      {question.answers.map((answer) => (
+                        <motion.div
+                          key={answer.id}
+                          initial={{ opacity: 0, x: 20 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          className="ml-6 pl-6 border-l-2 border-blue-200 bg-blue-50/50 rounded-r-xl p-4"
+                        >
+                          <div className="flex items-center justify-between mb-2">
+                            <div className="flex items-center space-x-2">
+                              <div className="w-8 h-8 bg-gradient-to-br from-green-600 to-emerald-600 rounded-full flex items-center justify-center">
+                                <User className="w-4 h-4 text-white" />
+                              </div>
+                              <p className="font-medium text-slate-900">{answer.author}</p>
+                              <p className="text-xs text-slate-500">{answer.date}</p>
+                            </div>
+                            
+                            <motion.button
+                              whileHover={{ scale: 1.02 }}
+                              whileTap={{ scale: 0.98 }}
+                              className="flex items-center space-x-1 text-slate-600 hover:text-blue-600 transition-colors"
+                            >
+                              <ThumbsUp className="w-4 h-4" />
+                              <span className="text-sm">{answer.helpful}</span>
+                            </motion.button>
+                          </div>
+                          <p className="text-slate-700">{answer.content}</p>
+                        </motion.div>
+                      ))}
+                    </div>
+
+                    {/* Answer Button for Alumni */}
+                    {user?.role === 'alumni' && (
+                      <div className="mt-4 pt-4 border-t border-gray-200">
+                        <motion.button
+                          whileHover={{ scale: 1.02 }}
+                          whileTap={{ scale: 0.98 }}
+                          className="flex items-center space-x-2 px-4 py-2 text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded-lg transition-colors"
+                        >
+                          <MessageCircle className="w-4 h-4" />
+                          <span>Answer this question</span>
+                        </motion.button>
+                      </div>
+                    )}
+                  </motion.div>
+                ))}
+
+                {mockQuestions.length === 0 && (
+                  <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    className="text-center py-12"
+                  >
+                    <div className="w-20 h-20 mx-auto mb-6 bg-gray-100 rounded-full flex items-center justify-center">
+                      <MessageCircle className="w-10 h-10 text-gray-400" />
+                    </div>
+                    <h3 className="text-xl font-semibold text-slate-900 mb-2">No questions yet</h3>
+                    <p className="text-slate-600 mb-6">Be the first to ask a question!</p>
+                    {user?.role === 'student' && (
+                      <motion.button
+                        whileHover={{ scale: 1.02 }}
+                        whileTap={{ scale: 0.98 }}
+                        onClick={() => setShowAskQuestion(true)}
+                        className="px-6 py-3 bg-indigo-600 text-white rounded-xl hover:bg-indigo-700 transition-colors"
+                      >
+                        Ask First Question
+                      </motion.button>
+                    )}
+                  </motion.div>
+                )}
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </main>
     </div>
   );

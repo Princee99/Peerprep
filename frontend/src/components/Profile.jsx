@@ -1,6 +1,24 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import '../styles/Profile.css';
+import { motion, AnimatePresence } from 'framer-motion';
+import {
+  ArrowLeft,
+  LogOut,
+  User,
+  Mail,
+  Phone,
+  GraduationCap,
+  Building2,
+  Briefcase,
+  Edit3,
+  Save,
+  X,
+  Camera,
+  MapPin,
+  Calendar,
+  Award,
+  Loader2
+} from 'lucide-react';
 
 const Profile = () => {
   const navigate = useNavigate();
@@ -64,10 +82,9 @@ const Profile = () => {
       setUser(updatedUser);
       
       setIsEditing(false);
-      alert('Profile updated successfully!');
+      // You can add a toast notification here instead of alert
     } catch (error) {
       console.error('Error updating profile:', error);
-      alert('Failed to update profile. Please try again.');
     } finally {
       setIsSaving(false);
     }
@@ -88,131 +105,286 @@ const Profile = () => {
     }
   };
 
- if (isLoading) {
+  const getRoleColors = (role) => {
+    switch (role) {
+      case 'student': 
+        return {
+          badge: 'bg-gradient-to-r from-indigo-500 to-purple-600 text-white',
+          avatar: 'bg-gradient-to-br from-indigo-500 to-purple-600',
+          header: 'from-indigo-500 to-purple-600'
+        };
+      case 'alumni': 
+        return {
+          badge: 'bg-gradient-to-r from-green-500 to-emerald-600 text-white',
+          avatar: 'bg-gradient-to-br from-green-500 to-emerald-600',
+          header: 'from-green-500 to-emerald-600'
+        };
+      case 'admin': 
+        return {
+          badge: 'bg-gradient-to-r from-blue-500 to-cyan-600 text-white',
+          avatar: 'bg-gradient-to-br from-blue-500 to-cyan-600',
+          header: 'from-blue-500 to-cyan-600'
+        };
+      default: 
+        return {
+          badge: 'bg-gradient-to-r from-gray-500 to-gray-600 text-white',
+          avatar: 'bg-gradient-to-br from-gray-500 to-gray-600',
+          header: 'from-gray-500 to-gray-600'
+        };
+    }
+  };
+
+  if (isLoading) {
     return (
-      <div className="company-detail" style={{position: 'relative'}}>
-        {isLoading && (
-          <div className="small-loading-indicator">
-            <div className="loading-spinner"></div>
-          </div>
-        )}
+      <div className="fixed inset-0 bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 flex items-center justify-center z-50">
+        <div className="flex flex-col items-center space-y-4">
+          <motion.div
+            animate={{ rotate: 360 }}
+            transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+            className="w-16 h-16 border-4 border-blue-200 border-t-blue-600 rounded-full"
+          />
+          <p className="text-slate-600 font-medium">Loading profile...</p>
+        </div>
       </div>
     );
   }
 
+  const roleColors = getRoleColors(user?.role);
+
   return (
-    <div className="profile-page">
-      <div className="profile-container">
-        {/* Header */}
-        <div className="profile-header">
-          <button className="back-btn" onClick={() => navigate(-1)}>
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <path d="M19 12H5M12 19l-7-7 7-7"/>
-            </svg>
-            Back
-          </button>
-          <h1>Profile</h1>
-          <button className="logout-btn" onClick={handleLogout}>
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/>
-            </svg>
-            Logout
-          </button>
-        </div>
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100">
+      {/* Header */}
+      <motion.header
+        initial={{ y: -50, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        className="sticky top-0 z-40 backdrop-blur-xl bg-white/80 border-b border-white/20 shadow-lg"
+      >
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between h-16">
+            <motion.button
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              onClick={() => navigate(-1)}
+              className="flex items-center space-x-2 px-4 py-2 text-slate-700 hover:text-slate-900 hover:bg-white/60 rounded-xl transition-all duration-200 backdrop-blur-sm"
+            >
+              <ArrowLeft className="w-5 h-5" />
+              <span className="font-medium">Back</span>
+            </motion.button>
 
-        {/* Profile Content */}
-        <div className="profile-content">
-          {/* Profile Picture Section */}
-          <div className="profile-picture-section">
-            <div className="profile-picture">
-              <svg width="80" height="80" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1">
-                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
-                <circle cx="12" cy="7" r="4"/>
-              </svg>
-            </div>
-            <div className="profile-info">
-              <h2>{user?.name || 'User Name'}</h2>
-              <span className="role-badge">{getRoleDisplayName(user?.role)}</span>
-              <p className="email">{user?.email}</p>
-            </div>
+            <h1 className="text-2xl font-bold bg-gradient-to-r from-slate-900 to-slate-700 bg-clip-text text-transparent">
+              Profile
+            </h1>
+
+            <motion.button
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              onClick={handleLogout}
+              className="flex items-center space-x-2 px-4 py-2 text-red-600 hover:text-red-700 hover:bg-red-50/80 rounded-xl transition-all duration-200 backdrop-blur-sm"
+            >
+              <LogOut className="w-5 h-5" />
+              <span className="font-medium">Logout</span>
+            </motion.button>
           </div>
+        </div>
+      </motion.header>
 
-          {/* Profile Form */}
-          <div className="profile-form">
-            <div className="form-section">
-              <h3>Personal Information</h3>
-              <div className="form-grid">
-                <div className="form-group">
-                  <label>Full Name</label>
-                  <input
-                    type="text"
-                    name="name"
-                    value={formData.name}
-                    onChange={handleChange}
-                    disabled={!isEditing}
-                    placeholder="Enter your full name"
-                  />
-                </div>
-                <div className="form-group">
-                  <label>Email</label>
-                  <input
-                    type="email"
-                    name="email"
-                    value={formData.email}
-                    onChange={handleChange}
-                    disabled={true}
-                    placeholder="Enter your email"
-                  />
-                </div>
-                <div className="form-group">
-                  <label>Phone Number</label>
-                  <input
-                    type="tel"
-                    name="phone"
-                    value={formData.phone}
-                    onChange={handleChange}
-                    disabled={!isEditing}
-                    placeholder="Enter your phone number"
-                  />
-                </div>
-                <div className="form-group">
-                  <label>Department</label>
-                  <select
-                    name="department"
-                    value={formData.department}
-                    onChange={handleChange}
-                    disabled={!isEditing}
+      {/* Main Content */}
+      <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="space-y-8"
+        >
+          {/* Profile Header Card */}
+          <motion.div
+            whileHover={{ y: -2 }}
+            className="relative overflow-hidden rounded-3xl bg-white/70 backdrop-blur-xl border border-white/20 shadow-2xl"
+          >
+            {/* Gradient Background */}
+            <div className={`absolute inset-0 bg-gradient-to-br ${roleColors.header} opacity-5`} />
+            
+            <div className="relative p-8">
+              <div className="flex flex-col sm:flex-row items-center sm:items-start space-y-6 sm:space-y-0 sm:space-x-8">
+                {/* Avatar */}
+                <div className="relative">
+                  <motion.div
+                    whileHover={{ scale: 1.05 }}
+                    className={`w-32 h-32 rounded-2xl ${roleColors.avatar} flex items-center justify-center shadow-2xl relative overflow-hidden`}
                   >
-                    <option value="">Select Department</option>
-                    <option value="IT">Information Technology</option>
-                    <option value="CS">Computer Science</option>
-                    <option value="CE">Computer Engineering</option>
-                    <option value="AIML">AI & Machine Learning</option>
-                  </select>
+                    <User className="w-16 h-16 text-white" />
+                    {isEditing && (
+                      <motion.button
+                        whileHover={{ scale: 1.1 }}
+                        whileTap={{ scale: 0.9 }}
+                        className="absolute bottom-2 right-2 w-10 h-10 bg-black/20 hover:bg-black/30 backdrop-blur-sm text-white rounded-full flex items-center justify-center transition-all duration-200"
+                      >
+                        <Camera className="w-5 h-5" />
+                      </motion.button>
+                    )}
+                  </motion.div>
                 </div>
-                <div className="form-group">
-                  <label>Graduation Year</label>
-                  <input
-                    type="number"
-                    name="graduationYear"
-                    value={formData.graduationYear}
-                    onChange={handleChange}
-                    disabled={!isEditing}
-                    placeholder="e.g., 2024"
-                    min="2000"
-                    max="2030"
-                  />
+
+                {/* User Info */}
+                <div className="flex-1 text-center sm:text-left">
+                  <h2 className="text-3xl font-bold text-slate-900 mb-3">
+                    {user?.name || 'User Name'}
+                  </h2>
+                  
+                  <div className="flex flex-wrap items-center justify-center sm:justify-start gap-3 mb-4">
+                    <span className={`px-4 py-2 rounded-full text-sm font-semibold ${roleColors.badge} shadow-lg`}>
+                      {getRoleDisplayName(user?.role)}
+                    </span>
+                    
+                    <div className="flex items-center text-slate-600 bg-white/60 backdrop-blur-sm px-3 py-2 rounded-full">
+                      <Mail className="w-4 h-4 mr-2" />
+                      <span className="text-sm">{user?.email}</span>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-center">
+                    <div className="bg-white/60 backdrop-blur-sm rounded-xl p-4 border border-white/20">
+                      <Calendar className="w-6 h-6 text-blue-600 mx-auto mb-2" />
+                      <p className="text-sm text-slate-600 font-medium">Member Since</p>
+                      <p className="text-lg font-bold text-slate-900">2024</p>
+                    </div>
+                    
+                    <div className="bg-white/60 backdrop-blur-sm rounded-xl p-4 border border-white/20">
+                      <GraduationCap className="w-6 h-6 text-green-600 mx-auto mb-2" />
+                      <p className="text-sm text-slate-600 font-medium">Department</p>
+                      <p className="text-lg font-bold text-slate-900">{formData.department || 'N/A'}</p>
+                    </div>
+                    
+                    <div className="bg-white/60 backdrop-blur-sm rounded-xl p-4 border border-white/20">
+                      <Award className="w-6 h-6 text-purple-600 mx-auto mb-2" />
+                      <p className="text-sm text-slate-600 font-medium">Year</p>
+                      <p className="text-lg font-bold text-slate-900">{formData.graduationYear || 'N/A'}</p>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
+          </motion.div>
 
-            {/* Professional Information (for Alumni) */}
+          {/* Personal Information */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.1 }}
+            className="bg-white/70 backdrop-blur-xl rounded-2xl border border-white/20 shadow-xl p-8"
+          >
+            <div className="flex items-center justify-between mb-8">
+              <h3 className="text-2xl font-bold text-slate-900 flex items-center">
+                <User className="w-6 h-6 mr-3 text-blue-600" />
+                Personal Information
+              </h3>
+              
+              {!isEditing && (
+                <motion.button
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  onClick={() => setIsEditing(true)}
+                  className="flex items-center space-x-2 px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl hover:from-blue-700 hover:to-indigo-700 transition-all duration-200 shadow-lg hover:shadow-xl"
+                >
+                  <Edit3 className="w-4 h-4" />
+                  <span>Edit Profile</span>
+                </motion.button>
+              )}
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="space-y-2">
+                <label className="block text-sm font-semibold text-slate-700">Full Name</label>
+                <input
+                  type="text"
+                  name="name"
+                  value={formData.name}
+                  onChange={handleChange}
+                  disabled={!isEditing}
+                  placeholder="Enter your full name"
+                  className="w-full px-4 py-3 bg-white/80 backdrop-blur-sm border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-slate-100 disabled:text-slate-600 transition-all duration-200"
+                />
+              </div>
+              
+              <div className="space-y-2">
+                <label className="block text-sm font-semibold text-slate-700">Email Address</label>
+                <input
+                  type="email"
+                  name="email"
+                  value={formData.email}
+                  onChange={handleChange}
+                  disabled={true}
+                  placeholder="Enter your email"
+                  className="w-full px-4 py-3 bg-slate-100 border border-slate-200 rounded-xl text-slate-600 cursor-not-allowed"
+                />
+              </div>
+              
+              <div className="space-y-2">
+                <label className="block text-sm font-semibold text-slate-700">Phone Number</label>
+                <input
+                  type="tel"
+                  name="phone"
+                  value={formData.phone}
+                  onChange={handleChange}
+                  disabled={!isEditing}
+                  placeholder="Enter your phone number"
+                  className="w-full px-4 py-3 bg-white/80 backdrop-blur-sm border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-slate-100 disabled:text-slate-600 transition-all duration-200"
+                />
+              </div>
+              
+              <div className="space-y-2">
+                <label className="block text-sm font-semibold text-slate-700">Department</label>
+                <select
+                  name="department"
+                  value={formData.department}
+                  onChange={handleChange}
+                  disabled={!isEditing}
+                  className="w-full px-4 py-3 bg-white/80 backdrop-blur-sm border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-slate-100 disabled:text-slate-600 transition-all duration-200"
+                >
+                  <option value="">Select Department</option>
+                  <option value="IT">Information Technology</option>
+                  <option value="CS">Computer Science</option>
+                  <option value="CE">Computer Engineering</option>
+                  <option value="AIML">AI & Machine Learning</option>
+                  <option value="ECE">Electronics & Communication</option>
+                  <option value="ME">Mechanical Engineering</option>
+                </select>
+              </div>
+              
+              <div className="space-y-2 md:col-span-2">
+                <label className="block text-sm font-semibold text-slate-700">Graduation Year</label>
+                <input
+                  type="number"
+                  name="graduationYear"
+                  value={formData.graduationYear}
+                  onChange={handleChange}
+                  disabled={!isEditing}
+                  min="2000"
+                  max="2030"
+                  placeholder="e.g., 2024"
+                  className="w-full px-4 py-3 bg-white/80 backdrop-blur-sm border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-slate-100 disabled:text-slate-600 transition-all duration-200"
+                />
+              </div>
+            </div>
+          </motion.div>
+
+          {/* Professional Information (for Alumni) */}
+          <AnimatePresence>
             {user?.role === 'alumni' && (
-              <div className="form-section">
-                <h3>Professional Information</h3>
-                <div className="form-grid">
-                  <div className="form-group">
-                    <label>Current Company</label>
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
+                transition={{ delay: 0.2 }}
+                className="bg-white/70 backdrop-blur-xl rounded-2xl border border-white/20 shadow-xl p-8"
+              >
+                <h3 className="text-2xl font-bold text-slate-900 mb-8 flex items-center">
+                  <Briefcase className="w-6 h-6 mr-3 text-green-600" />
+                  Professional Information
+                </h3>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="space-y-2">
+                    <label className="block text-sm font-semibold text-slate-700">Current Company</label>
                     <input
                       type="text"
                       name="currentCompany"
@@ -220,10 +392,12 @@ const Profile = () => {
                       onChange={handleChange}
                       disabled={!isEditing}
                       placeholder="Enter your current company"
+                      className="w-full px-4 py-3 bg-white/80 backdrop-blur-sm border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-slate-100 disabled:text-slate-600 transition-all duration-200"
                     />
                   </div>
-                  <div className="form-group">
-                    <label>Designation</label>
+                  
+                  <div className="space-y-2">
+                    <label className="block text-sm font-semibold text-slate-700">Designation</label>
                     <input
                       type="text"
                       name="designation"
@@ -231,88 +405,97 @@ const Profile = () => {
                       onChange={handleChange}
                       disabled={!isEditing}
                       placeholder="Enter your designation"
+                      className="w-full px-4 py-3 bg-white/80 backdrop-blur-sm border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-slate-100 disabled:text-slate-600 transition-all duration-200"
                     />
                   </div>
                 </div>
-              </div>
+              </motion.div>
             )}
+          </AnimatePresence>
 
-            {/* Bio Section */}
-            <div className="form-section">
-              <h3>About Me</h3>
-              <div className="form-group">
-                <label>Bio</label>
-                <textarea
-                  name="bio"
-                  value={formData.bio}
-                  onChange={handleChange}
-                  disabled={!isEditing}
-                  placeholder="Tell us about yourself..."
-                  rows="4"
-                />
-              </div>
+          {/* Bio Section */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3 }}
+            className="bg-white/70 backdrop-blur-xl rounded-2xl border border-white/20 shadow-xl p-8"
+          >
+            <h3 className="text-2xl font-bold text-slate-900 mb-8 flex items-center">
+              <Award className="w-6 h-6 mr-3 text-purple-600" />
+              About Me
+            </h3>
+            
+            <div className="space-y-2">
+              <label className="block text-sm font-semibold text-slate-700">Bio</label>
+              <textarea
+                name="bio"
+                value={formData.bio}
+                onChange={handleChange}
+                disabled={!isEditing}
+                rows="5"
+                placeholder="Tell us about yourself, your interests, achievements, and goals..."
+                className="w-full px-4 py-3 bg-white/80 backdrop-blur-sm border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-slate-100 disabled:text-slate-600 transition-all duration-200 resize-none"
+              />
             </div>
+          </motion.div>
 
-            {/* Action Buttons */}
-            <div className="profile-actions">
-              {!isEditing ? (
-                <button className="edit-btn" onClick={() => setIsEditing(true)}>
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
-                    <path d="m18.5 2.5 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
-                  </svg>
-                  Edit Profile
-                </button>
-              ) : (
-                <div className="edit-actions">
-                  <button 
-                    className="save-btn" 
-                    onClick={handleSave}
-                    disabled={isSaving}
-                  >
-                    {isSaving ? (
-                      <>
-                        <div className="spinner-small"></div>
-                        Saving...
-                      </>
-                    ) : (
-                      <>
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                          <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/>
-                          <polyline points="17,21 17,13 7,13 7,21"/>
-                          <polyline points="7,3 7,8 15,8"/>
-                        </svg>
-                        Save Changes
-                      </>
-                    )}
-                  </button>
-                  <button 
-                    className="cancel-btn" 
-                    onClick={() => {
-                      setIsEditing(false);
-                      // Reset form data to original values
-                      setFormData({
-                        name: user?.name || '',
-                        email: user?.email || '',
-                        phone: user?.phone || '',
-                        department: user?.department || '',
-                        graduationYear: user?.graduationYear || '',
-                        currentCompany: user?.currentCompany || '',
-                        designation: user?.designation || '',
-                        bio: user?.bio || ''
-                      });
-                    }}
-                  >
-                    Cancel
-                  </button>
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-      </div>
+          {/* Action Buttons */}
+          <AnimatePresence mode="wait">
+            {isEditing && (
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
+                className="flex flex-col sm:flex-row gap-4 justify-center"
+              >
+                <motion.button
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  onClick={handleSave}
+                  disabled={isSaving}
+                  className="flex items-center justify-center space-x-2 px-8 py-4 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-xl hover:from-green-700 hover:to-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 shadow-lg hover:shadow-xl"
+                >
+                  {isSaving ? (
+                    <>
+                      <Loader2 className="w-5 h-5 animate-spin" />
+                      <span>Saving...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Save className="w-5 h-5" />
+                      <span>Save Changes</span>
+                    </>
+                  )}
+                </motion.button>
+                
+                <motion.button
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  onClick={() => {
+                    setIsEditing(false);
+                    setFormData({
+                      name: user?.name || '',
+                      email: user?.email || '',
+                      phone: user?.phone || '',
+                      department: user?.department || '',
+                      graduationYear: user?.graduationYear || '',
+                      currentCompany: user?.currentCompany || '',
+                      designation: user?.designation || '',
+                      bio: user?.bio || ''
+                    });
+                  }}
+                  className="flex items-center justify-center space-x-2 px-8 py-4 bg-white/80 backdrop-blur-sm text-slate-700 border border-slate-200 rounded-xl hover:bg-white transition-all duration-200 shadow-lg hover:shadow-xl"
+                >
+                  <X className="w-5 h-5" />
+                  <span>Cancel</span>
+                </motion.button>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </motion.div>
+      </main>
     </div>
   );
 };
 
-export default Profile; 
+export default Profile;

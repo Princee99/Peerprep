@@ -1,6 +1,24 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import '../../styles/Dashboard.css';
+import { motion, AnimatePresence } from 'framer-motion';
+import {
+  Search,
+  Building2,
+  MapPin,
+  Globe,
+  User,
+  LogOut,
+  TrendingUp,
+  MessageSquare,
+  Star,
+  Target,
+  Settings,
+  Filter,
+  Award,
+  Users,
+  BookOpen,
+  ChevronRight
+} from 'lucide-react';
 
 const AlumniDashboard = () => {
   const navigate = useNavigate();
@@ -8,6 +26,7 @@ const AlumniDashboard = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [companies, setCompanies] = useState([]);
+  const [showUserDropdown, setShowUserDropdown] = useState(false);
 
   useEffect(() => {
     // Check if user is logged in and is alumni
@@ -26,7 +45,6 @@ const AlumniDashboard = () => {
   const fetchCompanies = async () => {
     try {
       const token = localStorage.getItem('token');
-      console.log('Fetching companies for alumni with token:', token ? 'Token exists' : 'No token');
       
       const response = await fetch('http://localhost:5000/api/companies', {
         headers: {
@@ -35,15 +53,10 @@ const AlumniDashboard = () => {
         }
       });
       
-      console.log('Alumni dashboard response status:', response.status);
-      
       if (response.ok) {
         const data = await response.json();
-        console.log('Companies data for alumni:', data);
         setCompanies(data);
       } else {
-        const errorData = await response.text();
-        console.error('Failed to fetch companies. Status:', response.status, 'Error:', errorData);
         setCompanies([]);
       }
     } catch (error) {
@@ -68,173 +81,400 @@ const AlumniDashboard = () => {
     company.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     company.location.toLowerCase().includes(searchTerm.toLowerCase())
   );
- if (isLoading) {
+
+  // Stats data for alumni contributions
+  const contributionStats = [
+    {
+      title: 'Reviews Added',
+      value: '0',
+      description: 'Start sharing your experiences!',
+      icon: Star,
+      color: 'blue',
+      gradient: 'from-blue-500 to-blue-600'
+    },
+    {
+      title: 'Questions Answered',
+      value: '0',
+      description: 'Help students with their questions!',
+      icon: MessageSquare,
+      color: 'green',
+      gradient: 'from-green-500 to-green-600'
+    },
+    {
+      title: 'Companies Reviewed',
+      value: '0',
+      description: 'Share your placement experiences!',
+      icon: Building2,
+      color: 'purple',
+      gradient: 'from-purple-500 to-purple-600'
+    },
+    {
+      title: 'Impact Score',
+      value: '0',
+      description: 'Your contribution to community!',
+      icon: Award,
+      color: 'orange',
+      gradient: 'from-orange-500 to-orange-600'
+    }
+  ];
+
+  const getStatColor = (color) => {
+    const colors = {
+      blue: 'bg-blue-50 text-blue-600',
+      green: 'bg-green-50 text-green-600',
+      purple: 'bg-purple-50 text-purple-600',
+      orange: 'bg-orange-50 text-orange-600'
+    };
+    return colors[color] || colors.blue;
+  };
+
+  if (isLoading) {
     return (
-      <div className="company-detail" style={{position: 'relative'}}>
-        {isLoading && (
-          <div className="small-loading-indicator">
-            <div className="loading-spinner"></div>
-          </div>
-        )}
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="flex flex-col items-center space-y-4">
+          <motion.div
+            animate={{ rotate: 360 }}
+            transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+            className="w-12 h-12 border-4 border-blue-200 border-t-blue-600 rounded-full"
+          />
+          <p className="text-gray-600">Loading dashboard...</p>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="dashboard">
-      {/* Header */}
-      <header className="dashboard-header">
-        <div className="header-left">
-          <h1 className="app-logo">PeerPrep</h1>
-          <p className="welcome-text">Welcome back, {user?.name || 'Alumni'}!</p>
-        </div>
-        <div className="header-right">
-          <div className="user-info">
-            <span className="user-avatar">👨‍🎓</span>
-            <span className="user-name">{user?.name || 'Alumni'}</span>
+    <div className="min-h-screen bg-gray-50 transition-colors duration-200">
+      {/* Sticky Header */}
+      <motion.header
+        initial={{ y: -100 }}
+        animate={{ y: 0 }}
+        className="sticky top-0 z-50 bg-white border-b border-gray-200 shadow-sm"
+      >
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between items-center h-16">
+            {/* Logo and Brand */}
+            <div className="flex items-center space-x-4">
+              <motion.div
+                whileHover={{ scale: 1.05 }}
+                className="flex items-center space-x-3"
+              >
+                <div className="w-10 h-10 bg-gradient-to-r from-green-600 to-teal-600 rounded-xl flex items-center justify-center">
+                  <Award className="w-6 h-6 text-white" />
+                </div>
+                <div className="hidden sm:block">
+                  <h1 className="text-xl font-bold text-gray-900">PeerPrep</h1>
+                  <p className="text-xs text-gray-500">Alumni Portal</p>
+                </div>
+              </motion.div>
+            </div>
+
+            {/* Right Side Actions */}
+            <div className="flex items-center space-x-4">
+              {/* User Dropdown */}
+              <div className="relative">
+                <motion.button
+                  whileHover={{ scale: 1.02 }}
+                  onClick={() => setShowUserDropdown(!showUserDropdown)}
+                  className="flex items-center space-x-3 p-2 rounded-lg hover:bg-gray-100 transition-colors"
+                >
+                  <div className="w-8 h-8 bg-gradient-to-r from-green-600 to-teal-600 rounded-full flex items-center justify-center">
+                    <span className="text-white text-sm font-semibold">
+                      {user?.name?.charAt(0) || 'A'}
+                    </span>
+                  </div>
+                  <div className="hidden sm:block text-left">
+                    <p className="text-sm font-medium text-gray-900">
+                      {user?.name || 'Alumni'}
+                    </p>
+                    <p className="text-xs text-gray-500">Alumni</p>
+                  </div>
+                </motion.button>
+
+                <AnimatePresence>
+                  {showUserDropdown && (
+                    <motion.div
+                      initial={{ opacity: 0, scale: 0.95, y: -10 }}
+                      animate={{ opacity: 1, scale: 1, y: 0 }}
+                      exit={{ opacity: 0, scale: 0.95, y: -10 }}
+                      className="absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-lg border border-gray-200 py-2"
+                    >
+                      <button
+                        onClick={() => navigate('/profile')}
+                        className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
+                      >
+                        <User className="w-4 h-4 mr-3" />
+                        Profile
+                      </button>
+                      <button
+                        onClick={() => setShowUserDropdown(false)}
+                        className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
+                      >
+                        <Settings className="w-4 h-4 mr-3" />
+                        Settings
+                      </button>
+                      <hr className="my-2 border-gray-200" />
+                      <button
+                        onClick={handleLogout}
+                        className="flex items-center w-full px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors"
+                      >
+                        <LogOut className="w-4 h-4 mr-3" />
+                        Logout
+                      </button>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+            </div>
           </div>
-          <button className="profile-btn" onClick={() => navigate('/profile')}>
-            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-            </svg>
-            Profile
-          </button>
-          <button className="logout-btn" onClick={handleLogout}>
-            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-            </svg>
-            Logout
-          </button>
         </div>
-      </header>
+      </motion.header>
 
       {/* Main Content */}
-      <main className="dashboard-main">
-        <div className="search-section">
-          <h2 className="section-title">Share Your Experience</h2>
-          <p className="section-subtitle">Help students prepare for placements by sharing your interview experiences and reviews</p>
-          <div className="search-container">
-            <div className="search-input-wrapper">
-              <svg className="search-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-              </svg>
-              <input
-                type="text"
-                placeholder="Search companies to add your review..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="search-input"
-              />
-            </div>
-          </div>
-        </div>
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Welcome Section */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="mb-8"
+        >
+          <h2 className="text-3xl font-bold text-gray-900 mb-2">
+            Welcome back, {user?.name || 'Alumni'}! 👨‍🎓
+          </h2>
+          <p className="text-gray-600">
+            Help students prepare for placements by sharing your interview experiences and reviews.
+          </p>
+        </motion.div>
 
-        <div className="companies-section">
-          <div className="companies-header">
-            <h3 className="companies-title">
-              {searchTerm ? `Search Results (${filteredCompanies.length})` : `All Companies (${companies.length})`}
-            </h3>
-            <p className="companies-subtitle">
-              Click on a company to view details and add your placement experience
-            </p>
-          </div>
-
-          <div className="companies-grid">
-            {filteredCompanies.map((company) => (
-              <div 
-                key={company.id} 
-                className="company-card"
-                onClick={() => handleCompanyClick(company.company_id)}
+        {/* Contribution Stats */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+          {contributionStats.map((stat, index) => {
+            const IconComponent = stat.icon;
+            return (
+              <motion.div
+                key={stat.title}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6, delay: index * 0.1 }}
+                whileHover={{ scale: 1.02, y: -5 }}
+                className="bg-white rounded-2xl border border-gray-200 p-6 shadow-sm hover:shadow-lg transition-all duration-200"
               >
-               <div className="company-logo">
-                            {company.logo_url ? (
-                <img
-                  src={`http://localhost:5000${company.logo_url}`}
-                  alt={company.name}
-                  className="logo-img"
-                />
-              ) : (
-                <span className="logo-text">{company.name.charAt(0)}</span>
-              )}
-              </div>
-                <div className="company-content">
-                  <h4 className="company-name">{company.name}</h4>
-                  <p className="company-location">
-                    <svg className="location-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                    </svg>
-                    {company.location}
-                  </p>
-                  <p className="company-website">
-                    <svg className="website-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9v-9m0-9v9" />
-                    </svg>
-                    {company.website}
-                  </p>
-                  {/* <p className="company-description">{company.description}</p> */}
-                  <div className="company-actions">
-                    <span className="view-details">View Details →</span>
+                <div className="flex items-center justify-between mb-4">
+                  <div className={`p-3 rounded-xl ${getStatColor(stat.color)}`}>
+                    <IconComponent className="w-6 h-6" />
+                  </div>
+                  <div className="flex items-center text-sm">
+                    <TrendingUp className="w-4 h-4 text-green-500 mr-1" />
+                    <span className="text-green-600 font-medium">+0%</span>
                   </div>
                 </div>
+                <div>
+                  <p className="text-2xl font-bold text-gray-900 mb-1">
+                    {stat.value}
+                  </p>
+                  <p className="text-sm text-gray-600 mb-1">{stat.title}</p>
+                  <p className="text-xs text-gray-500">{stat.description}</p>
+                </div>
+              </motion.div>
+            );
+          })}
+        </div>
+
+        {/* Companies Section */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.4 }}
+          className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden"
+        >
+          {/* Section Header */}
+          <div className="px-6 py-5 border-b border-gray-200">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+              <div>
+                <h3 className="text-xl font-semibold text-gray-900">
+                  Share Your Experience
+                </h3>
+                <p className="text-sm text-gray-600 mt-1">
+                  Click on a company to view details and add your placement experience
+                </p>
               </div>
-            ))}
+              <div className="flex items-center space-x-2 text-sm text-gray-600">
+                <Building2 className="w-4 h-4" />
+                <span>{companies.length} Companies Available</span>
+              </div>
+            </div>
           </div>
 
-          {filteredCompanies.length === 0 && searchTerm && (
-            <div className="no-results">
-              <div className="no-results-icon">🔍</div>
-              <h3>No companies found</h3>
-              <p>Try adjusting your search terms</p>
-              <button 
-                className="clear-search-btn"
-                onClick={() => setSearchTerm('')}
+          {/* Search and Filters */}
+          <div className="px-6 py-4 border-b border-gray-200 bg-gray-50">
+            <div className="flex flex-col sm:flex-row gap-4">
+              <div className="flex-1 relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+                <input
+                  type="text"
+                  placeholder="Search companies to add your review..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="w-full pl-10 pr-4 py-2.5 bg-white border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all duration-200 text-gray-900 placeholder-gray-500"
+                />
+              </div>
+              <motion.button
+                whileHover={{ scale: 1.02 }}
+                className="inline-flex items-center px-4 py-2.5 bg-white border border-gray-300 text-gray-700 text-sm font-medium rounded-xl hover:bg-gray-50 transition-colors"
               >
-                Clear Search
-              </button>
-            </div>
-          )}
-
-          {companies.length === 0 && !searchTerm && (
-            <div className="no-results">
-              <div className="no-results-icon">🏢</div>
-              <h3>No companies available</h3>
-              <p>Companies will appear here once they are added to the platform</p>
-            </div>
-          )}
-        </div>
-
-        {/* Your Contributions Section */}
-        <div className="stats-section">
-          <h3 className="section-title">Your Contributions</h3>
-          <div className="stats-grid">
-            <div className="stat-card">
-              <div className="stat-icon">📝</div>
-              <div className="stat-content">
-                <h3 className="stat-title">Reviews Added</h3>
-                <p className="stat-value">0</p>
-                <span className="stat-change">Start sharing your experiences!</span>
-              </div>
-            </div>
-            <div className="stat-card">
-              <div className="stat-icon">💬</div>
-              <div className="stat-content">
-                <h3 className="stat-title">Questions Answered</h3>
-                <p className="stat-value">0</p>
-                <span className="stat-change">Help students with their questions!</span>
-              </div>
-            </div>
-            <div className="stat-card">
-              <div className="stat-icon">🎯</div>
-              <div className="stat-content">
-                <h3 className="stat-title">Companies Reviewed</h3>
-                <p className="stat-value">0</p>
-                <span className="stat-change">Share your placement experiences!</span>
-              </div>
+                <Filter className="w-4 h-4 mr-2" />
+                Filter
+              </motion.button>
             </div>
           </div>
-        </div>
+
+          {/* Companies Grid */}
+          <div className="p-6">
+            {filteredCompanies.length > 0 ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {filteredCompanies.map((company, index) => (
+                  <motion.div
+                    key={company.company_id}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.3, delay: index * 0.05 }}
+                    whileHover={{ scale: 1.02, y: -5 }}
+                    onClick={() => handleCompanyClick(company.company_id)}
+                    className="bg-white rounded-xl border border-gray-200 p-6 hover:shadow-lg hover:border-green-300 transition-all duration-200 cursor-pointer group"
+                  >
+                    <div className="flex items-start space-x-4">
+                      <div className="flex-shrink-0">
+                        {company.logo_url ? (
+                          <img
+                            src={`http://localhost:5000${company.logo_url}`}
+                            alt={company.name}
+                            className="w-12 h-12 rounded-xl object-cover"
+                          />
+                        ) : (
+                          <div className="w-12 h-12 bg-gradient-to-r from-green-500 to-teal-600 rounded-xl flex items-center justify-center">
+                            <span className="text-white font-semibold text-lg">
+                              {company.name.charAt(0)}
+                            </span>
+                          </div>
+                        )}
+                      </div>
+                      
+                      <div className="flex-1 min-w-0">
+                        <h4 className="text-lg font-semibold text-gray-900 group-hover:text-green-600 transition-colors">
+                          {company.name}
+                        </h4>
+                        
+                        <div className="flex items-center mt-2 text-sm text-gray-600">
+                          <MapPin className="w-4 h-4 mr-1 flex-shrink-0" />
+                          <span className="truncate">{company.location}</span>
+                        </div>
+                        
+                        <div className="flex items-center mt-1 text-sm text-gray-600">
+                          <Globe className="w-4 h-4 mr-1 flex-shrink-0" />
+                          <a 
+                            href={company.website} 
+                            target="_blank" 
+                            rel="noopener noreferrer"
+                            className="truncate hover:text-green-600 transition-colors"
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            {company.website}
+                          </a>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center justify-between mt-4 pt-4 border-t border-gray-200">
+                      <span className="text-sm text-green-600 font-medium opacity-0 group-hover:opacity-100 transition-all duration-200 flex items-center">
+                        Share Experience
+                        <ChevronRight className="w-4 h-4 ml-1" />
+                      </span>
+                      <div className="flex items-center space-x-2 text-xs text-gray-500 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <Star className="w-3.5 h-3.5" />
+                        <span>Add Review</span>
+                      </div>
+                    </div>
+                  </motion.div>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-12">
+                <div className="w-16 h-16 mx-auto mb-4 bg-gray-100 rounded-2xl flex items-center justify-center">
+                  {searchTerm ? (
+                    <Search className="w-8 h-8 text-gray-400" />
+                  ) : (
+                    <Building2 className="w-8 h-8 text-gray-400" />
+                  )}
+                </div>
+                <h3 className="text-lg font-medium text-gray-900 mb-2">
+                  {searchTerm ? 'No companies found' : 'No companies available'}
+                </h3>
+                <p className="text-gray-600 mb-6">
+                  {searchTerm 
+                    ? 'Try adjusting your search terms'
+                    : 'Companies will appear here once they are added to the platform'
+                  }
+                </p>
+                {searchTerm && (
+                  <motion.button
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    onClick={() => setSearchTerm('')}
+                    className="inline-flex items-center px-4 py-2 bg-gray-100 text-gray-700 text-sm font-medium rounded-xl hover:bg-gray-200 transition-colors"
+                  >
+                    Clear Search
+                  </motion.button>
+                )}
+              </div>
+            )}
+          </div>
+        </motion.div>
+
+        {/* Quick Actions Section */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.6 }}
+          className="mt-8 bg-gradient-to-r from-green-50 to-teal-50 rounded-2xl border border-green-200 p-6"
+        >
+          <div className="flex items-center justify-between">
+            <div>
+              <h3 className="text-xl font-semibold text-gray-900 mb-2">
+                Ready to Help Students? 🚀
+              </h3>
+              <p className="text-gray-600">
+                Your placement experiences can guide the next generation of students.
+              </p>
+            </div>
+            <div className="flex space-x-3">
+              <motion.button
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                className="px-4 py-2 bg-white border border-gray-300 text-gray-700 text-sm font-medium rounded-xl hover:bg-gray-50 transition-colors"
+              >
+                <BookOpen className="w-4 h-4 mr-2 inline" />
+                View Guidelines
+              </motion.button>
+              <motion.button
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                className="px-4 py-2 bg-gradient-to-r from-green-600 to-teal-600 text-white text-sm font-medium rounded-xl hover:from-green-700 hover:to-teal-700 transition-all duration-200 shadow-lg"
+              >
+                <Users className="w-4 h-4 mr-2 inline" />
+                Start Contributing
+              </motion.button>
+            </div>
+          </div>
+        </motion.div>
       </main>
+
+      {/* Click outside to close dropdowns */}
+      {showUserDropdown && (
+        <div
+          className="fixed inset-0 z-40"
+          onClick={() => setShowUserDropdown(false)}
+        />
+      )}
     </div>
   );
 };
