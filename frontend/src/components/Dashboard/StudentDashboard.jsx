@@ -142,11 +142,19 @@ const StudentDashboard = () => {
               <div 
                 key={company.id} 
                 className="company-card"
-                onClick={() => handleCompanyClick(company.id)}
+                onClick={() => handleCompanyClick(company.company_id)}
               >
-                <div className="company-logo">
-                  <span className="logo-text">{company.name.charAt(0)}</span>
-                </div>
+               <div className="company-logo">
+                            {company.logo_url ? (
+                <img
+                  src={`http://localhost:5000${company.logo_url}`}
+                  alt={company.name}
+                  className="logo-img"
+                />
+              ) : (
+                <span className="logo-text">{company.name.charAt(0)}</span>
+              )}
+              </div>
                 <div className="company-content">
                   <h4 className="company-name">{company.name}</h4>
                   <p className="company-location">
@@ -162,7 +170,7 @@ const StudentDashboard = () => {
                     </svg>
                     {company.website}
                   </p>
-                  <p className="company-description">{company.description}</p>
+                  {/* <p className="company-description">{company.description}</p> */}
                   <div className="company-actions">
                     <span className="view-details">View Details →</span>
                   </div>

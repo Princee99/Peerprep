@@ -16,7 +16,8 @@ const AdminDashboard = () => {
     name: '',
     location: '',
     website: '',
-    description: ''
+    // description: '',
+    logo: ''
   });
 
   useEffect(() => {
@@ -84,36 +85,30 @@ const AdminDashboard = () => {
       setIsAddingCompany(true);
       try {
         const token = localStorage.getItem('token');
-        console.log('Adding company:', newCompany);
-        
+        const formData = new FormData();
+        formData.append('name', newCompany.name);
+        formData.append('location', newCompany.location);
+        formData.append('website', newCompany.website);
+        // formData.append('description', newCompany.description);
+        if (newCompany.logo) formData.append('logo', newCompany.logo);
+
         const response = await fetch('http://localhost:5000/api/companies', {
           method: 'POST',
           headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json'
+            'Authorization': `Bearer ${token}`
+            // Do NOT set Content-Type for FormData; browser will set it
           },
-          body: JSON.stringify(newCompany)
+          body: formData
         });
-        
-        console.log('Add company response status:', response.status);
-        
+
         if (response.ok) {
-          const addedCompany = await response.json();
-          console.log('Company added successfully:', addedCompany);
-          
-          // Fetch updated companies list
           await fetchCompanies();
-          
-          // Reset form
-          setNewCompany({ name: '', location: '', website: '', description: '' });
+          setNewCompany({ name: '', location: '', website: '', logo: '' });
           setShowAddCompany(false);
         } else {
-          const errorData = await response.text();
-          console.error('Failed to add company. Status:', response.status, 'Error:', errorData);
           alert('Failed to add company. Please try again.');
         }
       } catch (error) {
-        console.error('Error adding company:', error);
         alert('Failed to add company. Please try again.');
       } finally {
         setIsAddingCompany(false);
@@ -122,10 +117,10 @@ const AdminDashboard = () => {
   };
 
   const handleInputChange = (e) => {
-    const { name, value } = e.target;
+    const { name, value, files } = e.target;
     setNewCompany(prev => ({
       ...prev,
-      [name]: value
+      [name]: files ? files[0] : value
     }));
   };
 
@@ -221,11 +216,24 @@ const AdminDashboard = () => {
               <div 
                 key={company.id} 
                 className="company-card"
-                onClick={() => handleCompanyClick(company.id)}
+                onClick={() => handleCompanyClick(company.company_id)}
               >
-                <div className="company-logo">
+                {/* <div className="company-logo">
                   <span className="logo-text">{company.name.charAt(0)}</span>
-                </div>
+                </div> */}
+
+                  <div className="company-logo">
+                            {company.logo_url ? (
+                <img
+                  src={`http://localhost:5000${company.logo_url}`}
+                  alt={company.name}
+                  className="logo-img"
+                />
+              ) : (
+                <span className="logo-text">{company.name.charAt(0)}</span>
+              )}
+              </div>
+                
                 <div className="company-content">
                   <h4 className="company-name">{company.name}</h4>
                   <p className="company-location">
@@ -241,7 +249,7 @@ const AdminDashboard = () => {
                     </svg>
                     {company.website}
                   </p>
-                  <p className="company-description">{company.description}</p>
+                  {/* <p className="company-description">{company.description}</p> */}
                   <div className="company-actions">
                     <span className="view-details">View Details →</span>
                   </div>
@@ -333,7 +341,7 @@ const AdminDashboard = () => {
                   disabled={isAddingCompany}
                 />
               </div>
-              <div className="form-group">
+              {/* <div className="form-group">
                 <label htmlFor="description">Description</label>
                 <textarea
                   id="description"
@@ -342,6 +350,17 @@ const AdminDashboard = () => {
                   onChange={handleInputChange}
                   placeholder="Enter company description"
                   rows="3"
+                  disabled={isAddingCompany}
+                /> */}
+              {/* </div> */}
+              <div className="form-group">
+                <label htmlFor="logo">Company Logo</label>
+                <input
+                  type="file"
+                  id="logo"
+                  name="logo"
+                  accept="image/*"
+                  onChange={handleInputChange}
                   disabled={isAddingCompany}
                 />
               </div>
@@ -370,4 +389,4 @@ const AdminDashboard = () => {
   );
 };
 
-export default AdminDashboard; 
+export default AdminDashboard;

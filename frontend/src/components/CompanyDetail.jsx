@@ -53,10 +53,11 @@ const CompanyDetail = () => {
           name: 'Company',
           location: 'Location',
           website: 'https://example.com',
-          description: 'Company description'
+          // description: 'Company description'
+          logo_url: 'https://example.com/logo.png'
         });
       }
-    } catch (error) {
+    }  catch (error) {
       console.error('Error fetching company details:', error);
       console.error('Error details:', error.message);
       // Fallback to mock data if API fails
@@ -65,7 +66,8 @@ const CompanyDetail = () => {
         name: 'Company',
         location: 'Location',
         website: 'https://example.com',
-        description: 'Company description'
+        // description: 'Company description'
+        logo_url: 'https://example.com/logo.png'
       });
     } finally {
       setIsLoading(false);
@@ -202,7 +204,16 @@ const CompanyDetail = () => {
           </button>
           <div className="company-info">
             <div className="company-logo-large">
-              <span className="logo-text">{company.name.charAt(0)}</span>
+              {/* <span className="logo-text">{company.name.charAt(0)}</span> */}
+                {company.logo_url ? (
+    <img
+      src={`http://localhost:5000${company.logo_url}`}
+      alt={company.name}
+      className="logo-img"
+    />
+  ) : (
+    <span className="logo-text">{company.name.charAt(0)}</span>
+  )}
             </div>
             <div className="company-details">
               <h1 className="company-name">{company.name}</h1>
@@ -278,7 +289,7 @@ const CompanyDetail = () => {
                   <p>Private</p>
                 </div>
               </div>
-              <p className="company-description">{company.description}</p>
+              {/* <p className="company-description">{company.description}</p> */}
             </div>
 
             <div className="placement-process">
@@ -430,7 +441,7 @@ const CompanyDetail = () => {
               ))}
 
               {mockQuestions.length === 0 && (
-                <div className="no-questions">
+                <div className="no-questions">  
                   <div className="no-questions-icon">❓</div>
                   <h3>No questions yet</h3>
                   <p>Be the first to ask a question!</p>
@@ -444,4 +455,4 @@ const CompanyDetail = () => {
   );
 };
 
-export default CompanyDetail; 
+export default CompanyDetail;

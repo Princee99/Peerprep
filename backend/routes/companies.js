@@ -1,6 +1,25 @@
+// const express = require("express");
+// const app = express();
+// app.use('/uploads', express.static('uploads'));
+
 const router = require('express').Router();
 const pool = require('../config/db');
 const auth = require('../middleware/auth');
+const isAdmin = require('../middleware/isAdmin');
+const multer = require('multer');
+const path = require('path');
+const cors = require('cors');
+// Configure multer for file uploads
+const storage = multer.diskStorage({
+    destination: (req, file, cb) => {
+        cb(null, 'uploads/');
+    },
+    filename: (req, file, cb) => {
+     cb(null, file.originalname);
+    }
+});
+
+const upload = multer({ storage });
 
 // Get a single company by ID (this must come BEFORE the general GET route)
 router.get('/:id', auth, async (req, res) => {
@@ -9,7 +28,7 @@ router.get('/:id', auth, async (req, res) => {
         // console.log('Fetching company with ID:', id);
         
         const company = await pool.query(
-            "SELECT * FROM companies WHERE id = $1",
+            "SELECT * FROM companies WHERE company_id = $1",
             [id]
         );
 
@@ -40,14 +59,15 @@ router.get('/', auth, async (req, res) => {
 });
 
 // Add a new company
-router.post('/', auth, async (req, res) => {
+router.post('/', auth, isAdmin,upload.single('logo'),async (req, res) => {
     try {
-        const { name, website, location, description } = req.body;
+        const { name, website, location } = req.body;
         const user_id = req.user.user_id; // From auth middleware
+        const logo_url = req.file ? `/uploads/${req.file.filename}` : null; // Get the logo URL from the uploaded file
 
         const newCompany = await pool.query(
-            "INSERT INTO companies (name, website, location, description, created_by) VALUES ($1, $2, $3, $4, $5) RETURNING *",
-            [name, website, location, description, user_id]
+            "INSERT INTO companies (name, website, location, logo_url, created_by) VALUES ($1, $2, $3, $4, $5) RETURNING *",
+            [name, website, location, logo_url, user_id]
         );
 
         res.json(newCompany.rows[0]);
@@ -58,14 +78,14 @@ router.post('/', auth, async (req, res) => {
 });
 
 // Update a company
-router.put('/:id', auth, async (req, res) => {
+router.put('/:id', auth,isAdmin, async (req, res) => {
     try {
         const { id } = req.params;
-        const { name, website, location, description } = req.body;
+        const { name, website, location, logo_url } = req.body;
 
         const updateCompany = await pool.query(
-            "UPDATE companies SET name = $1, website = $2, location = $3, description = $4 WHERE id = $5 RETURNING *",
-            [name, website, location, description, id]
+            "UPDATE companies SET name = $1, website = $2, location = $3, logo_url = $4 WHERE company_id = $5 RETURNING *",
+            [name, website, location, logo_url, id]
         );
 
         if (updateCompany.rows.length === 0) {
@@ -80,11 +100,11 @@ router.put('/:id', auth, async (req, res) => {
 });
 
 // Delete a company
-router.delete('/:id', auth, async (req, res) => {
+router.delete('/:id', auth, isAdmin, async (req, res) => {
     try {
         const { id } = req.params;
         const deleteCompany = await pool.query(
-            "DELETE FROM companies WHERE id = $1 RETURNING *",
+            "DELETE FROM companies WHERE company_id = $1 RETURNING *",
             [id]
         );
 
