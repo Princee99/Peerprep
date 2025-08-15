@@ -88,11 +88,14 @@ const Profile = () => {
     }
   };
 
-  if (isLoading) {
+ if (isLoading) {
     return (
-      <div className="profile-loading">
-        <div className="spinner"></div>
-        <p>Loading profile...</p>
+      <div className="company-detail" style={{position: 'relative'}}>
+        {isLoading && (
+          <div className="small-loading-indicator">
+            <div className="loading-spinner"></div>
+          </div>
+        )}
       </div>
     );
   }

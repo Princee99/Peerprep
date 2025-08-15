@@ -68,12 +68,14 @@ const AlumniDashboard = () => {
     company.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     company.location.toLowerCase().includes(searchTerm.toLowerCase())
   );
-
-  if (isLoading) {
+ if (isLoading) {
     return (
-      <div className="dashboard-loading">
-        <div className="loading-spinner"></div>
-        <p>Loading Alumni Dashboard...</p>
+      <div className="company-detail" style={{position: 'relative'}}>
+        {isLoading && (
+          <div className="small-loading-indicator">
+            <div className="loading-spinner"></div>
+          </div>
+        )}
       </div>
     );
   }

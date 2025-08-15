@@ -129,17 +129,14 @@ const AdminDashboard = () => {
     company.location.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  if (isLoading) {
-    return (
-      <div className="admin-loading">
-        <div className="loading-spinner"></div>
-        <p>Loading Admin Dashboard...</p>
-      </div>
-    );
-  }
 
   return (
     <div className="admin-dashboard">
+      {isLoading && (
+        <div className="small-loading-indicator">
+          <div className="loading-spinner"></div>
+        </div>
+      )}
       {/* Header */}
       <header className="admin-header">
         <div className="header-left">

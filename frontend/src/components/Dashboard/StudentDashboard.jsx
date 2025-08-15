@@ -69,15 +69,18 @@ const StudentDashboard = () => {
     company.location.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  if (isLoading) {
+   if (isLoading) {
     return (
-      <div className="dashboard-loading">
-        <div className="loading-spinner"></div>
-        <p>Loading Student Dashboard...</p>
+      <div className="company-detail" style={{position: 'relative'}}>
+        {isLoading && (
+          <div className="small-loading-indicator">
+            <div className="loading-spinner"></div>
+          </div>
+        )}
       </div>
     );
   }
-
+  
   return (
     <div className="dashboard">
       {/* Header */}

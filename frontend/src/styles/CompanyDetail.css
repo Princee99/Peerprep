@@ -1,3 +1,34 @@
+.header-right .right-btn {
+  margin-left: auto;
+  order: -1;
+}
+/* Small Loading Indicator Styles */
+.small-loading-indicator {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.loading-spinner {
+  border: 6px solid #e3eafc;
+  border-top: 6px solid #2563eb;
+  border-radius: 50%;
+  width: 48px;
+  height: 48px;
+  animation: spin 1s linear infinite;
+  background: transparent;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
 /* Company Detail Styles */
 .company-detail {
   min-height: 100vh;
@@ -64,7 +95,7 @@ body {
 .back-btn {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 4px;
   padding: 8px 16px;
   background: #f1f5f9;
   border: none;

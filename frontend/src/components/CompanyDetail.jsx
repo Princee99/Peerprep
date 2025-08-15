@@ -171,9 +171,12 @@ const CompanyDetail = () => {
 
   if (isLoading) {
     return (
-      <div className="company-loading">
-        <div className="loading-spinner"></div>
-        <p>Loading Company Details...</p>
+      <div className="company-detail" style={{position: 'relative'}}>
+        {isLoading && (
+          <div className="small-loading-indicator">
+            <div className="loading-spinner"></div>
+          </div>
+        )}
       </div>
     );
   }
