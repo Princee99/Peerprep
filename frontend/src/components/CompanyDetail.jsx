@@ -26,7 +26,9 @@ import {
   Brain,
   Monitor,
   UserCheck,
-  HandHeart
+  HandHeart,
+  ChevronDown,
+  Settings
 } from 'lucide-react';
 
 const CompanyDetail = () => {
@@ -38,6 +40,7 @@ const CompanyDetail = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [showAddReview, setShowAddReview] = useState(false);
   const [showAskQuestion, setShowAskQuestion] = useState(false);
+  const [showUserMenu, setShowUserMenu] = useState(false);
 
   useEffect(() => {
     // Check if user is logged in
@@ -74,7 +77,10 @@ const CompanyDetail = () => {
           name: 'Tech Company',
           location: 'Bangalore, India',
           website: 'https://example.com',
-          logo_url: null
+          logo_url: null,
+          industry: 'Technology',
+          type: 'Private',
+          description: 'A leading technology company focused on innovation and digital transformation.'
         });
       }
     } catch (error) {
@@ -85,7 +91,10 @@ const CompanyDetail = () => {
         name: 'Tech Company',
         location: 'Bangalore, India',
         website: 'https://example.com',
-        logo_url: null
+        logo_url: null,
+        industry: 'Technology',
+        type: 'Private',
+        description: 'A leading technology company focused on innovation and digital transformation.'
       });
     } finally {
       setIsLoading(false);
@@ -111,19 +120,19 @@ const CompanyDetail = () => {
     { id: 'questions', label: 'Q&A', icon: MessageCircle, color: 'indigo' }
   ];
 
-  const getTabColor = (color) => {
+  const getTabColor = (color, isActive = false) => {
     const colors = {
-      blue: 'text-blue-600 bg-blue-50 border-blue-200',
-      purple: 'text-purple-600 bg-purple-50 border-purple-200',
-      green: 'text-green-600 bg-green-50 border-green-200',
-      orange: 'text-orange-600 bg-orange-50 border-orange-200',
-      pink: 'text-pink-600 bg-pink-50 border-pink-200',
-      indigo: 'text-indigo-600 bg-indigo-50 border-indigo-200'
+      blue: isActive ? 'bg-blue-500 text-white border-blue-500' : 'text-blue-600 hover:bg-blue-50 border-transparent hover:border-blue-200',
+      purple: isActive ? 'bg-purple-500 text-white border-purple-500' : 'text-purple-600 hover:bg-purple-50 border-transparent hover:border-purple-200',
+      green: isActive ? 'bg-green-500 text-white border-green-500' : 'text-green-600 hover:bg-green-50 border-transparent hover:border-green-200',
+      orange: isActive ? 'bg-orange-500 text-white border-orange-500' : 'text-orange-600 hover:bg-orange-50 border-transparent hover:border-orange-200',
+      pink: isActive ? 'bg-pink-500 text-white border-pink-500' : 'text-pink-600 hover:bg-pink-50 border-transparent hover:border-pink-200',
+      indigo: isActive ? 'bg-indigo-500 text-white border-indigo-500' : 'text-indigo-600 hover:bg-indigo-50 border-transparent hover:border-indigo-200'
     };
     return colors[color] || colors.blue;
   };
 
-  // Mock reviews data
+  // Mock data for other sections (keeping existing mock data)
   const mockReviews = {
     aptitude: [
       {
@@ -171,7 +180,6 @@ const CompanyDetail = () => {
     ]
   };
 
-  // Mock questions data
   const mockQuestions = [
     {
       id: 1,
@@ -245,7 +253,7 @@ const CompanyDetail = () => {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50 flex items-center justify-center">
         <div className="flex flex-col items-center space-y-4">
           <motion.div
             animate={{ rotate: 360 }}
@@ -260,7 +268,7 @@ const CompanyDetail = () => {
 
   if (!company) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50 flex items-center justify-center">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -285,132 +293,236 @@ const CompanyDetail = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100">
-      {/* Header */}
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50">
+      {/* Navigation Header */}
       <motion.header
         initial={{ y: -100, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
-        className="sticky top-0 z-50 backdrop-blur-xl bg-white/80 border-b border-white/20 shadow-lg"
+        className="sticky top-0 z-50 backdrop-blur-xl bg-white/80 border-b border-slate-200/60 shadow-sm"
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-20">
-            {/* Left Section */}
-            <div className="flex items-center space-x-6">
+          <div className="flex items-center justify-between h-16">
+            {/* Left Section - Back Button */}
+            <motion.button
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              onClick={handleBack}
+              className="flex items-center space-x-2 px-3 py-2 text-slate-600 hover:text-slate-900 hover:bg-slate-100/80 rounded-lg transition-all duration-200"
+            >
+              <ArrowLeft className="w-5 h-5" />
+              <span className="font-medium hidden sm:block">Back</span>
+            </motion.button>
+
+            {/* Center Section - Navigation Tabs */}
+            <nav className="hidden md:flex items-center space-x-1">
+              {tabs.slice(0, 4).map((tab) => {
+                const IconComponent = tab.icon;
+                return (
+                  <motion.button
+                    key={tab.id}
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    onClick={() => setActiveTab(tab.id)}
+                    className={`flex items-center space-x-2 px-4 py-2 rounded-lg font-medium transition-all duration-200 border ${
+                      activeTab === tab.id
+                        ? getTabColor(tab.color, true)
+                        : getTabColor(tab.color, false)
+                    }`}
+                  >
+                    <IconComponent className="w-4 h-4" />
+                    <span className="hidden lg:block">{tab.label}</span>
+                  </motion.button>
+                );
+              })}
+              
+              {/* More Menu for remaining tabs */}
+              <div className="relative">
+                <motion.button
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  className="flex items-center space-x-2 px-4 py-2 text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-lg transition-all duration-200"
+                >
+                  <span>More</span>
+                  <ChevronDown className="w-4 h-4" />
+                </motion.button>
+              </div>
+            </nav>
+
+            {/* Mobile Navigation */}
+            <nav className="md:hidden">
+              <select
+                value={activeTab}
+                onChange={(e) => setActiveTab(e.target.value)}
+                className="px-3 py-2 bg-white border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              >
+                {tabs.map((tab) => (
+                  <option key={tab.id} value={tab.id}>
+                    {tab.label}
+                  </option>
+                ))}
+              </select>
+            </nav>
+
+            {/* Right Section - User Menu */}
+            <div className="relative">
               <motion.button
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
-                onClick={handleBack}
-                className="flex items-center space-x-2 px-4 py-2 text-slate-700 hover:text-slate-900 hover:bg-white/60 rounded-xl transition-all duration-200 backdrop-blur-sm"
+                onClick={() => setShowUserMenu(!showUserMenu)}
+                className="flex items-center space-x-3 px-3 py-2 bg-white/80 backdrop-blur-sm rounded-lg border border-slate-200/50 hover:bg-white transition-all duration-200"
               >
-                <ArrowLeft className="w-5 h-5" />
-                <span className="font-medium">Back</span>
-              </motion.button>
-
-              <div className="flex items-center space-x-4">
-                {/* Company Logo */}
-                <div className="relative">
-                  {company.logo_url ? (
-                    <img
-                      src={`http://localhost:5000${company.logo_url}`}
-                      alt={company.name}
-                      className="w-16 h-16 rounded-2xl object-cover shadow-lg"
-                    />
-                  ) : (
-                    <div className="w-16 h-16 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-2xl flex items-center justify-center shadow-lg">
-                      <span className="text-white text-2xl font-bold">
-                        {company.name.charAt(0)}
-                      </span>
-                    </div>
-                  )}
-                </div>
-
-                {/* Company Info */}
-                <div>
-                  <h1 className="text-2xl font-bold text-slate-900">{company.name}</h1>
-                  <div className="flex items-center space-x-4 text-slate-600">
-                    <div className="flex items-center space-x-1">
-                      <MapPin className="w-4 h-4" />
-                      <span className="text-sm">{company.location}</span>
-                    </div>
-                    <div className="flex items-center space-x-1">
-                      <Globe className="w-4 h-4" />
-                      <a
-                        href={company.website}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-sm hover:text-blue-600 transition-colors"
-                      >
-                        Visit Website
-                        <ExternalLink className="w-3 h-3 inline ml-1" />
-                      </a>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Right Section */}
-            <div className="flex items-center space-x-4">
-              <div className="flex items-center space-x-3 px-4 py-2 bg-white/60 backdrop-blur-sm rounded-xl">
                 <div className="w-8 h-8 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-full flex items-center justify-center">
                   <span className="text-white text-sm font-semibold">
                     {user?.name?.charAt(0) || 'U'}
                   </span>
                 </div>
-                <div>
-                  <p className="text-sm font-medium text-slate-900">{user?.name || 'User'}</p>
+                <div className="hidden sm:block text-left">
+                  <p className="text-sm font-semibold text-slate-900">{user?.name || 'User'}</p>
                   <p className="text-xs text-slate-600 capitalize">{user?.role}</p>
                 </div>
-              </div>
-
-              <motion.button
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-                onClick={handleLogout}
-                className="flex items-center space-x-2 px-4 py-2 text-red-600 hover:text-red-700 hover:bg-red-50/80 rounded-xl transition-all duration-200 backdrop-blur-sm"
-              >
-                <LogOut className="w-5 h-5" />
-                <span className="font-medium">Logout</span>
+                <ChevronDown className="w-4 h-4 text-slate-400" />
               </motion.button>
+
+              {/* User Dropdown Menu */}
+              <AnimatePresence>
+                {showUserMenu && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                    className="absolute right-0 mt-2 w-48 bg-white/95 backdrop-blur-xl rounded-xl shadow-xl border border-slate-200/50 py-2"
+                  >
+                    <button className="w-full px-4 py-2 text-left text-slate-700 hover:bg-slate-50 transition-colors flex items-center space-x-2">
+                      <Settings className="w-4 h-4" />
+                      <span>Settings</span>
+                    </button>
+                    <hr className="my-2 border-slate-200" />
+                    <button
+                      onClick={handleLogout}
+                      className="w-full px-4 py-2 text-left text-red-600 hover:bg-red-50 transition-colors flex items-center space-x-2"
+                    >
+                      <LogOut className="w-4 h-4" />
+                      <span>Logout</span>
+                    </button>
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </div>
           </div>
         </div>
       </motion.header>
 
-      {/* Navigation Tabs */}
-      <motion.nav
-        initial={{ y: 50, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        transition={{ delay: 0.1 }}
-        className="sticky top-20 z-40 backdrop-blur-xl bg-white/70 border-b border-white/20"
-      >
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex space-x-1 py-4 overflow-x-auto">
-            {tabs.map((tab) => {
-              const IconComponent = tab.icon;
-              return (
-                <motion.button
-                  key={tab.id}
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                  onClick={() => setActiveTab(tab.id)}
-                  className={`flex items-center space-x-2 px-6 py-3 rounded-xl font-medium transition-all duration-200 whitespace-nowrap ${
-                    activeTab === tab.id
-                      ? `${getTabColor(tab.color)} shadow-lg`
-                      : 'text-slate-600 hover:text-slate-900 hover:bg-white/60'
-                  }`}
-                >
-                  <IconComponent className="w-5 h-5" />
-                  <span>{tab.label}</span>
-                </motion.button>
-              );
-            })}
-          </div>
-        </div>
-      </motion.nav>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+        {/* Company Profile Card */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="mb-8"
+        >
+          <div className="bg-white/70 backdrop-blur-xl rounded-2xl border border-white/50 shadow-xl p-8">
+            <div className="flex flex-col md:flex-row md:items-center md:space-x-8 space-y-6 md:space-y-0">
+              {/* Company Logo */}
+              <div className="flex-shrink-0">
+                {company.logo_url ? (
+                  <div className="relative">
+                    <img
+                      src={`http://localhost:5000${company.logo_url}`}
+                      alt={company.name}
+                      className="w-24 h-24 md:w-32 md:h-32 rounded-2xl object-cover shadow-lg border border-white/50"
+                    />
+                    <div className="absolute inset-0 rounded-2xl bg-gradient-to-t from-black/10 to-transparent"></div>
+                  </div>
+                ) : (
+                  <div className="w-24 h-24 md:w-32 md:h-32 bg-gradient-to-br from-slate-700 via-slate-600 to-slate-800 rounded-2xl flex items-center justify-center shadow-lg border border-white/50">
+                    <span className="text-white text-2xl md:text-3xl font-bold tracking-wide">
+                      {company.name.split(' ').map(word => word.charAt(0)).join('').substring(0, 2)}
+                    </span>
+                  </div>
+                )}
+              </div>
 
-      {/* Main Content */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+              {/* Company Information */}
+              <div className="flex-1 space-y-4">
+                {/* Company Name and Description */}
+                <div>
+                  <h1 className="text-3xl md:text-4xl font-bold text-slate-900 mb-2">{company.name}</h1>
+                  {company.description && (
+                    <p className="text-slate-600 text-lg leading-relaxed">{company.description}</p>
+                  )}
+                </div>
+
+                {/* Company Details Grid */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                  {/* Location */}
+                  <motion.div
+                    whileHover={{ scale: 1.02 }}
+                    className="flex items-center space-x-3 p-4 bg-white/60 backdrop-blur-sm rounded-xl border border-white/40 hover:bg-white/80 transition-all duration-200"
+                  >
+                    <div className="p-2 bg-blue-100 rounded-lg">
+                      <MapPin className="w-5 h-5 text-blue-600" />
+                    </div>
+                    <div>
+                      <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Location</p>
+                      <p className="font-semibold text-slate-900">{company.location}</p>
+                    </div>
+                  </motion.div>
+
+                  {/* Website */}
+                  <motion.div
+                    whileHover={{ scale: 1.02 }}
+                    className="flex items-center space-x-3 p-4 bg-white/60 backdrop-blur-sm rounded-xl border border-white/40 hover:bg-white/80 transition-all duration-200"
+                  >
+                    <div className="p-2 bg-green-100 rounded-lg">
+                      <Globe className="w-5 h-5 text-green-600" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Website</p>
+                      <a
+                        href={company.website}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="font-semibold text-blue-600 hover:text-blue-700 transition-colors flex items-center space-x-1 group"
+                      >
+                        <span className="truncate">Visit Site</span>
+                        <ExternalLink className="w-3 h-3 flex-shrink-0 group-hover:translate-x-0.5 transition-transform" />
+                      </a>
+                    </div>
+                  </motion.div>
+
+                  {/* Industry */}
+                  <motion.div
+                    whileHover={{ scale: 1.02 }}
+                    className="flex items-center space-x-3 p-4 bg-white/60 backdrop-blur-sm rounded-xl border border-white/40 hover:bg-white/80 transition-all duration-200"
+                  >
+                    <div className="p-2 bg-purple-100 rounded-lg">
+                      <Briefcase className="w-5 h-5 text-purple-600" />
+                    </div>
+                    <div>
+                      <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Industry</p>
+                      <p className="font-semibold text-slate-900">{company.industry || 'Technology'}</p>
+                    </div>
+                  </motion.div>
+
+                  {/* Company Type */}
+                  <motion.div
+                    whileHover={{ scale: 1.02 }}
+                    className="flex items-center space-x-3 p-4 bg-white/60 backdrop-blur-sm rounded-xl border border-white/40 hover:bg-white/80 transition-all duration-200"
+                  >
+                    <div className="p-2 bg-orange-100 rounded-lg">
+                      <Building2 className="w-5 h-5 text-orange-600" />
+                    </div>
+                    <div>
+                      <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Type</p>
+                      <p className="font-semibold text-slate-900">{company.type || 'Private'}</p>
+                    </div>
+                  </motion.div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </motion.div>
+
+        {/* Tab Content */}
         <AnimatePresence mode="wait">
           {activeTab === 'overview' && (
             <motion.div
@@ -420,78 +532,8 @@ const CompanyDetail = () => {
               exit={{ opacity: 0, y: -20 }}
               className="space-y-8"
             >
-              {/* Company Overview Cards */}
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                <motion.div
-                  whileHover={{ y: -4 }}
-                  className="bg-white/70 backdrop-blur-xl rounded-2xl border border-white/20 shadow-lg p-6"
-                >
-                  <div className="flex items-center space-x-3">
-                    <div className="p-3 bg-blue-100 rounded-xl">
-                      <Globe className="w-6 h-6 text-blue-600" />
-                    </div>
-                    <div>
-                      <h3 className="font-semibold text-slate-900">Website</h3>
-                      <a
-                        href={company.website}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-sm text-blue-600 hover:text-blue-700"
-                      >
-                        Visit Site
-                      </a>
-                    </div>
-                  </div>
-                </motion.div>
-
-                <motion.div
-                  whileHover={{ y: -4 }}
-                  className="bg-white/70 backdrop-blur-xl rounded-2xl border border-white/20 shadow-lg p-6"
-                >
-                  <div className="flex items-center space-x-3">
-                    <div className="p-3 bg-green-100 rounded-xl">
-                      <MapPin className="w-6 h-6 text-green-600" />
-                    </div>
-                    <div>
-                      <h3 className="font-semibold text-slate-900">Location</h3>
-                      <p className="text-sm text-slate-600">{company.location}</p>
-                    </div>
-                  </div>
-                </motion.div>
-
-                <motion.div
-                  whileHover={{ y: -4 }}
-                  className="bg-white/70 backdrop-blur-xl rounded-2xl border border-white/20 shadow-lg p-6"
-                >
-                  <div className="flex items-center space-x-3">
-                    <div className="p-3 bg-purple-100 rounded-xl">
-                      <Briefcase className="w-6 h-6 text-purple-600" />
-                    </div>
-                    <div>
-                      <h3 className="font-semibold text-slate-900">Industry</h3>
-                      <p className="text-sm text-slate-600">Technology</p>
-                    </div>
-                  </div>
-                </motion.div>
-
-                <motion.div
-                  whileHover={{ y: -4 }}
-                  className="bg-white/70 backdrop-blur-xl rounded-2xl border border-white/20 shadow-lg p-6"
-                >
-                  <div className="flex items-center space-x-3">
-                    <div className="p-3 bg-orange-100 rounded-xl">
-                      <Building2 className="w-6 h-6 text-orange-600" />
-                    </div>
-                    <div>
-                      <h3 className="font-semibold text-slate-900">Type</h3>
-                      <p className="text-sm text-slate-600">Private</p>
-                    </div>
-                  </div>
-                </motion.div>
-              </div>
-
               {/* Placement Process */}
-              <div className="bg-white/70 backdrop-blur-xl rounded-2xl border border-white/20 shadow-lg p-8">
+              <div className="bg-white/70 backdrop-blur-xl rounded-2xl border border-white/50 shadow-lg p-8">
                 <h2 className="text-2xl font-bold text-slate-900 mb-8 flex items-center">
                   <Target className="w-6 h-6 mr-3 text-blue-600" />
                   Placement Process
@@ -506,9 +548,9 @@ const CompanyDetail = () => {
                         initial={{ opacity: 0, x: -20 }}
                         animate={{ opacity: 1, x: 0 }}
                         transition={{ delay: index * 0.1 }}
-                        className="flex items-start space-x-4"
+                        className="flex items-start space-x-4 p-6 bg-white/60 rounded-xl hover:bg-white/80 transition-all duration-200"
                       >
-                        <div className={`flex-shrink-0 w-12 h-12 rounded-xl flex items-center justify-center ${
+                        <div className={`flex-shrink-0 w-12 h-12 rounded-xl flex items-center justify-center shadow-sm ${
                           step.color === 'blue' ? 'bg-blue-100' :
                           step.color === 'purple' ? 'bg-purple-100' :
                           step.color === 'green' ? 'bg-green-100' :
@@ -543,6 +585,7 @@ const CompanyDetail = () => {
             </motion.div>
           )}
 
+          {/* Other tab contents remain the same but with updated styling */}
           {['aptitude', 'technical', 'personal', 'hr'].includes(activeTab) && (
             <motion.div
               key={activeTab}
@@ -580,7 +623,7 @@ const CompanyDetail = () => {
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: index * 0.1 }}
                     whileHover={{ y: -2 }}
-                    className="bg-white/70 backdrop-blur-xl rounded-2xl border border-white/20 shadow-lg p-6"
+                    className="bg-white/70 backdrop-blur-xl rounded-2xl border border-white/50 shadow-lg p-6"
                   >
                     <div className="flex items-start justify-between mb-4">
                       <div className="flex items-center space-x-3">
@@ -597,7 +640,7 @@ const CompanyDetail = () => {
                         <div className="flex items-center space-x-1 mb-1">
                           {[...Array(5)].map((_, i) => (
                             <Star
-                              key={i}c
+                              key={i}
                               className={`w-4 h-4 ${
                                 i < review.rating ? 'text-yellow-400 fill-current' : 'text-gray-300'
                               }`}
@@ -627,7 +670,7 @@ const CompanyDetail = () => {
                   <motion.div
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
-                    className="text-center py-12"
+                    className="text-center py-12 bg-white/50 backdrop-blur-xl rounded-2xl border border-white/40"
                   >
                     <div className="w-20 h-20 mx-auto mb-6 bg-gray-100 rounded-full flex items-center justify-center">
                       <Star className="w-10 h-10 text-gray-400" />
@@ -687,7 +730,7 @@ const CompanyDetail = () => {
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: index * 0.1 }}
                     whileHover={{ y: -2 }}
-                    className="bg-white/70 backdrop-blur-xl rounded-2xl border border-white/20 shadow-lg p-6"
+                    className="bg-white/70 backdrop-blur-xl rounded-2xl border border-white/50 shadow-lg p-6"
                   >
                     {/* Question Header */}
                     <div className="flex items-center justify-between mb-4">
@@ -712,7 +755,7 @@ const CompanyDetail = () => {
                           key={answer.id}
                           initial={{ opacity: 0, x: 20 }}
                           animate={{ opacity: 1, x: 0 }}
-                          className="ml-6 pl-6 border-l-2 border-blue-200 bg-blue-50/50 rounded-r-xl p-4"
+                          className="ml-6 pl-6 border-l-2 border-blue-200 bg-blue-50/50 backdrop-blur-sm rounded-r-xl p-4"
                         >
                           <div className="flex items-center justify-between mb-2">
                             <div className="flex items-center space-x-2">
@@ -757,7 +800,7 @@ const CompanyDetail = () => {
                   <motion.div
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
-                    className="text-center py-12"
+                    className="text-center py-12 bg-white/50 backdrop-blur-xl rounded-2xl border border-white/40"
                   >
                     <div className="w-20 h-20 mx-auto mb-6 bg-gray-100 rounded-full flex items-center justify-center">
                       <MessageCircle className="w-10 h-10 text-gray-400" />
@@ -780,7 +823,7 @@ const CompanyDetail = () => {
             </motion.div>
           )}
         </AnimatePresence>
-      </main>
+      </div>
     </div>
   );
 };
