@@ -23,4 +23,4 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
-backend/generate-password.js
+backend/generate_password_from_excel.js

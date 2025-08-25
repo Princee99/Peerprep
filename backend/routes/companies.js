@@ -78,24 +78,23 @@ router.post('/', auth, isAdmin,upload.single('logo'),async (req, res) => {
 });
 
 // Update a company
-router.put('/:id', auth,isAdmin, async (req, res) => {
+router.put('/:id', auth,isAdmin, upload.single('logo'), async (req, res) => {
+    const { name, location, website } = req.body;
+    const logo = req.file ? `/uploads/${req.file.filename}` : null;
     try {
-        const { id } = req.params;
-        const { name, website, location, logo_url } = req.body;
-
-        const updateCompany = await pool.query(
-            "UPDATE companies SET name = $1, website = $2, location = $3, logo_url = $4 WHERE company_id = $5 RETURNING *",
-            [name, website, location, logo_url, id]
-        );
-
-        if (updateCompany.rows.length === 0) {
-            return res.status(404).json({ message: "Company not found" });
-        }
-
-        res.json(updateCompany.rows[0]);
+      const updateQuery = `
+        UPDATE companies
+        SET name = $1, location = $2, website = $3${logo ? ', logo_url = $4' : ''}
+        WHERE company_id = $5
+        RETURNING *;
+      `;
+      const params = logo
+        ? [name, location, website, logo, req.params.id]
+        : [name, location, website, req.params.id];
+      const result = await pool.query(updateQuery, params);
+      res.json(result.rows[0]);
     } catch (err) {
-        console.error(err.message);
-        res.status(500).json({ message: "Server Error" });
+      res.status(500).json({ error: 'Failed to update company' });
     }
 });
 

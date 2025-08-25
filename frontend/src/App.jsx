@@ -1,11 +1,11 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import Home from './components/Home';
-import Login from './components/Login';
-import AdminDashboard from './components/Dashboard/AdminDashboard';
-import StudentDashboard from './components/Dashboard/StudentDashboard';
-import AlumniDashboard from './components/Dashboard/AlumniDashboard';
-import CompanyDetail from './components/CompanyDetail';
-import Profile from './components/Profile';
+import Home from './pages/Home';
+import Login from './pages/Login';
+import AdminDashboard from './pages/Dashboard/AdminDashboard';
+import StudentDashboard from './pages/Dashboard/StudentDashboard';
+import AlumniDashboard from './pages/Dashboard/AlumniDashboard';
+import CompanyDetail from './pages/CompanyDetail';
+import Profile from './pages/Profile';
 import './App.css';
 
 // Protected Route Component
