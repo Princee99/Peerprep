@@ -108,7 +108,7 @@ const AlumniDashboard = () => {
       setMessage('Review submitted successfully!');
       setShowReviewModal(false);
       setReviewData({ job_role: '', placement_type: '', offer_status: '' });
-      navigate(`/company/${selectedCompany.company_id}/review/${review_id}`);
+      navigate(`/company/${selectedCompany.company_id}/review/${review_id}/reviewrounds`);
     } catch (err) {
       setMessage('Failed to submit review.');
     } finally {
