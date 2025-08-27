@@ -19,6 +19,7 @@ import {
   BookOpen,
   ChevronRight
 } from 'lucide-react';
+import axios from 'axios';
 
 const AlumniDashboard = () => {
   const navigate = useNavigate();
@@ -27,6 +28,15 @@ const AlumniDashboard = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [companies, setCompanies] = useState([]);
   const [showUserDropdown, setShowUserDropdown] = useState(false);
+  const [showReviewModal, setShowReviewModal] = useState(false);
+  const [selectedCompany, setSelectedCompany] = useState(null);
+  const [reviewData, setReviewData] = useState({
+    job_role: '',
+    placement_type: '',
+    offer_status: ''
+  });
+  const [loading, setLoading] = useState(false);
+  const [message, setMessage] = useState('');
 
   useEffect(() => {
     // Check if user is logged in and is alumni
@@ -73,8 +83,37 @@ const AlumniDashboard = () => {
     navigate('/');
   };
 
-  const handleCompanyClick = (companyId) => {
-    navigate(`/company/${companyId}`);
+  const handleCompanyClick = (company) => {
+    setSelectedCompany(company);
+    setShowReviewModal(true);
+  };
+
+  const handleReviewSubmit = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    setMessage('');
+    try {
+      const token = localStorage.getItem('token');
+      await axios.post(
+        `http://localhost:5000/api/reviews/${selectedCompany.company_id}`,
+        reviewData,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+      const { review_id } = response.data;
+      setMessage('Review submitted successfully!');
+      setShowReviewModal(false);
+      setReviewData({ job_role: '', placement_type: '', offer_status: '' });
+      navigate(`/company/${selectedCompany.company_id}/review/${review_id}`);
+    } catch (err) {
+      setMessage('Failed to submit review.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const filteredCompanies = companies.filter(company =>
@@ -339,7 +378,7 @@ const AlumniDashboard = () => {
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.3, delay: index * 0.05 }}
                     whileHover={{ scale: 1.02, y: -5 }}
-                    onClick={() => handleCompanyClick(company.company_id)}
+                    onClick={() => handleCompanyClick(company)}
                     className="bg-white rounded-xl border border-gray-200 p-6 hover:shadow-lg hover:border-green-300 transition-all duration-200 cursor-pointer group"
                   >
                     <div className="flex items-start space-x-4">
@@ -474,6 +513,77 @@ const AlumniDashboard = () => {
           className="fixed inset-0 z-40"
           onClick={() => setShowUserDropdown(false)}
         />
+      )}
+
+      {/* Review Modal */}
+      {showReviewModal && selectedCompany && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-xl shadow-lg p-8 w-full max-w-md">
+            <h2 className="text-xl font-bold mb-4">Add Review for {selectedCompany.name}</h2>
+            <form onSubmit={handleReviewSubmit} className="space-y-6">
+              <div>
+                <label className="block text-sm font-semibold mb-2">Job Role</label>
+                <input
+                  type="text"
+                  value={reviewData.job_role}
+                  onChange={e => setReviewData({ ...reviewData, job_role: e.target.value })}
+                  required
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-semibold mb-2">Placement Type</label>
+                <select
+                  value={reviewData.placement_type}
+                  onChange={e => setReviewData({ ...reviewData, placement_type: e.target.value })}
+                  required
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg"
+                >
+                  <option value="">Select type</option>
+                  <option value="on-campus">On Campus</option>
+                  <option value="off-campus">Off Campus</option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-semibold mb-2">Offer Status</label>
+                <select
+                  value={reviewData.offer_status}
+                  onChange={e => setReviewData({ ...reviewData, offer_status: e.target.value })}
+                  required
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg"
+                >
+                  <option value="">Select status</option>
+                  <option value="offer">Offer</option>
+                  <option value="no-offer">No Offer</option>
+                </select>
+              </div>
+              <button
+                type="submit"
+                disabled={loading}
+                className="w-full py-2 px-4 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+              >
+                {loading ? 'Submitting...' : 'Submit Review'}
+              </button>
+            </form>
+            {message && (
+              <div
+                className={`mt-4 text-center text-sm font-semibold px-4 py-2 rounded-lg transition-all duration-300 ${
+                  message === 'Review submitted successfully!'
+                    ? 'bg-green-100 text-green-700 border border-green-300 shadow'
+                    : 'bg-red-100 text-red-700 border border-red-300 shadow'
+                }`}
+              >
+                {message}
+              </div>
+            )}
+            <button
+              onClick={() => setShowReviewModal(false)}
+              className="mt-6 w-full py-2 px-4 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors"
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
       )}
     </div>
   );

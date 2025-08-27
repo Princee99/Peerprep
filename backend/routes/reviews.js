@@ -1,9 +1,78 @@
 const express = require('express');
 const router = express.Router();
+const pool = require('../config/db');
+const auth = require('../middleware/auth');
 const reviewController = require('../controllers/reviewController');
 
-// Add a review (alumni only, add auth middleware as needed)
-router.post('/', reviewController.addReview);
+// Add a review for a company (only alumni)
+router.post('/:companyId', auth, async (req, res) => {
+    try {
+        const { job_role, placement_type, offer_status } = req.body;
+        const companyId = req.params.companyId;
+        const userId = req.user.user_id;
+        const userRole = req.user.role;
+
+        // Only alumni can add reviews
+        if (userRole !== 'alumni') {
+            return res.status(403).json({ error: 'Only alumni can add reviews.' });
+        }
+
+        // Validate placement_type and offer_status
+        const validPlacementTypes = ['on-campus', 'off-campus'];
+        const validOfferStatus = ['offer', 'no-offer'];
+        if (!validPlacementTypes.includes(placement_type) || !validOfferStatus.includes(offer_status)) {
+            return res.status(400).json({ error: 'Invalid placement type or offer status.' });
+        }
+
+        // Insert review
+        const result = await pool.query(
+            `INSERT INTO reviews (company_id, alumni_id, job_role, placement_type, offer_status)
+             VALUES ($1, $2, $3, $4, $5) RETURNING *`,
+            [companyId, userId, job_role, placement_type, offer_status]
+        );
+
+        res.status(201).json({ message: 'Review added successfully', review: result.rows[0] });
+    } catch (err) {
+        res.status(500).json({ error: 'Failed to add review' });
+    }
+});
+
+// Add a round to a review
+router.post('/:reviewId/rounds', auth, async (req, res) => {
+    const { reviewId } = req.params;
+    const { round_type, description, tips } = req.body;
+    try {
+        // Validate round_type
+        const validRoundTypes = ['aptitude', 'technical', 'hr', 'other'];
+        if (!validRoundTypes.includes(round_type)) {
+            return res.status(400).json({ error: 'Invalid round type.' });
+        }
+        const result = await pool.query(
+            `INSERT INTO review_rounds (review_id, round_type, description, tips)
+             VALUES ($1, $2, $3, $4) RETURNING *`,
+            [reviewId, round_type, description, tips]
+        );
+        res.status(201).json({ message: 'Round added successfully', round: result.rows[0] });
+    } catch (err) {
+        console.error(err.message);
+        res.status(500).json({ message: 'Server Error' });
+    }
+});
+
+// Get all rounds for a review
+router.get('/:reviewId/rounds', async (req, res) => {
+    const { reviewId } = req.params;
+    try {
+        const result = await pool.query(
+            `SELECT * FROM review_rounds WHERE review_id = $1 ORDER BY round_id ASC`,
+            [reviewId]
+        );
+        res.json(result.rows);
+    } catch (err) {
+        console.error(err.message);
+        res.status(500).json({ message: 'Server Error' });
+    }
+});
 
 // Get reviews for a company
 router.get('/:company_id', reviewController.getReviews);

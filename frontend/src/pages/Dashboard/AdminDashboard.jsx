@@ -20,6 +20,8 @@ import {
   Settings,
   Filter
 } from 'lucide-react';
+import useDeleteCompany from '../../hooks/useDeleteCompany';
+import useUpdateCompany from '../../hooks/useUpdateCompany';
 
 const AdminDashboard = () => {
   const navigate = useNavigate();
@@ -30,6 +32,8 @@ const AdminDashboard = () => {
   const [companies, setCompanies] = useState([]);
   const [isAddingCompany, setIsAddingCompany] = useState(false);
   const [showUserDropdown, setShowUserDropdown] = useState(false);
+  const { deleteCompany, loading: deleteLoading, error: deleteError, success: deleteSuccess } = useDeleteCompany();
+  const { updateCompany, loading: updateLoading, error: updateError, success: updateSuccess } = useUpdateCompany();
 
   // Add Company Form State
   const [newCompany, setNewCompany] = useState({
@@ -38,6 +42,10 @@ const AdminDashboard = () => {
     website: '',
     logo: ''
   });
+
+  // Update Company Form State
+  const [showUpdateCompany, setShowUpdateCompany] = useState(false);
+  const [selectedCompany, setSelectedCompany] = useState(null);
 
   useEffect(() => {
     // Check if user is logged in and is admin
@@ -467,7 +475,8 @@ const AdminDashboard = () => {
                           className="p-1.5 rounded-lg bg-blue-100 text-blue-600 hover:bg-blue-200 transition-colors"
                           onClick={(e) => {
                             e.stopPropagation();
-                            // Handle edit
+                            setSelectedCompany(company);
+                            setShowUpdateCompany(true);
                           }}
                         >
                           <Edit className="w-3.5 h-3.5" />
@@ -478,7 +487,9 @@ const AdminDashboard = () => {
                           className="p-1.5 rounded-lg bg-red-100 text-red-600 hover:bg-red-200 transition-colors"
                           onClick={(e) => {
                             e.stopPropagation();
-                            // Handle delete
+                            if (window.confirm(`Are you sure you want to delete ${company.name}?`)) {
+                              deleteCompany(company.company_id).then(() => fetchCompanies());
+                            }
                           }}
                         >
                           <Trash2 className="w-3.5 h-3.5" />
@@ -656,6 +667,120 @@ const AdminDashboard = () => {
                       />
                     )}
                     {isAddingCompany ? 'Adding...' : 'Add Company'}
+                  </motion.button>
+                </div>
+              </form>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Update Company Dialog */}
+      <AnimatePresence>
+        {showUpdateCompany && selectedCompany && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-50"
+            onClick={() => setShowUpdateCompany(false)}
+          >
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 20 }}
+              transition={{ type: "spring", duration: 0.3 }}
+              className="bg-white rounded-2xl shadow-2xl max-w-md w-full max-h-[90vh] overflow-y-auto border border-gray-200"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200">
+                <h3 className="text-xl font-semibold text-gray-900">Update Company</h3>
+                <motion.button
+                  whileHover={{ scale: 1.1 }}
+                  whileTap={{ scale: 0.9 }}
+                  onClick={() => setShowUpdateCompany(false)}
+                  className="p-2 rounded-lg hover:bg-gray-100 transition-colors"
+                >
+                  <X className="w-5 h-5 text-gray-500" />
+                </motion.button>
+              </div>
+              <form
+                onSubmit={async (e) => {
+                  e.preventDefault();
+                  const form = e.target;
+                  const updatedData = {
+                    name: form.name.value,
+                    location: form.location.value,
+                    website: form.website.value,
+                    logo: form.logo.files[0] || null
+                  };
+                  await updateCompany(selectedCompany.company_id, updatedData);
+                  setShowUpdateCompany(false);
+                  fetchCompanies();
+                }}
+                className="p-6 space-y-5"
+                encType="multipart/form-data"
+              >
+                <div>
+                  <label htmlFor="name" className="block text-sm font-semibold text-gray-700 mb-2">Company Name *</label>
+                  <input
+                    type="text"
+                    id="name"
+                    name="name"
+                    defaultValue={selectedCompany.name}
+                    required
+                    className="w-full px-4 py-3 bg-white border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 text-gray-900 placeholder-gray-500"
+                  />
+                </div>
+                <div>
+                  <label htmlFor="location" className="block text-sm font-semibold text-gray-700 mb-2">Location *</label>
+                  <input
+                    type="text"
+                    id="location"
+                    name="location"
+                    defaultValue={selectedCompany.location}
+                    required
+                    className="w-full px-4 py-3 bg-white border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 text-gray-900 placeholder-gray-500"
+                  />
+                </div>
+                <div>
+                  <label htmlFor="website" className="block text-sm font-semibold text-gray-700 mb-2">Website *</label>
+                  <input
+                    type="url"
+                    id="website"
+                    name="website"
+                    defaultValue={selectedCompany.website}
+                    required
+                    className="w-full px-4 py-3 bg-white border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 text-gray-900 placeholder-gray-500"
+                  />
+                </div>
+                <div>
+                  <label htmlFor="logo" className="block text-sm font-semibold text-gray-700 mb-2">Company Logo</label>
+                  <input
+                    type="file"
+                    id="logo"
+                    name="logo"
+                    accept="image/*"
+                    className="w-full px-4 py-3 bg-white border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 text-gray-900 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:bg-blue-50 file:text-blue-600 hover:file:bg-blue-100 file:transition-colors"
+                  />
+                </div>
+                <div className="flex justify-end space-x-3 pt-6">
+                  <motion.button
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    type="button"
+                    onClick={() => setShowUpdateCompany(false)}
+                    className="px-6 py-2.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-xl hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 transition-all duration-200"
+                  >
+                    Cancel
+                  </motion.button>
+                  <motion.button
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    type="submit"
+                    className="px-6 py-2.5 text-sm font-medium text-white bg-gradient-to-r from-blue-600 to-purple-600 border border-transparent rounded-xl hover:from-blue-700 hover:to-purple-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-all duration-200 flex items-center shadow-lg"
+                  >
+                    {updateLoading ? 'Updating...' : 'Update Company'}
                   </motion.button>
                 </div>
               </form>

@@ -6,6 +6,7 @@ import StudentDashboard from './pages/Dashboard/StudentDashboard';
 import AlumniDashboard from './pages/Dashboard/AlumniDashboard';
 import CompanyDetail from './pages/CompanyDetail';
 import Profile from './pages/Profile';
+import ReviewRounds from './pages/ReviewRounds';
 import './App.css';
 
 // Protected Route Component
@@ -94,6 +95,14 @@ function App() {
             } 
           />
           
+          <Route 
+            path="/company/:companyId/review/:reviewId" 
+            element={
+              <ProtectedRoute>
+                <ReviewRounds />
+              </ProtectedRoute>
+            } 
+          />
           <Route path="*" element={<Navigate to="/" />} />
         </Routes>
       </div>
