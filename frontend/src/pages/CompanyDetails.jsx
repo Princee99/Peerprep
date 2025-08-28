@@ -6,7 +6,7 @@ import {
   ChevronDown, ChevronUp, Award, MessageSquare, FileText,
   CheckCircle, XCircle, ArrowLeft, Calendar
 } from 'lucide-react';
-import apiClient from '../services/apiClient';
+import axios from 'axios';
 
 const CompanyDetails = () => {
   const { companyId } = useParams();
@@ -19,6 +19,14 @@ const CompanyDetails = () => {
   const [selectedReview, setSelectedReview] = useState(null);
   const [rounds, setRounds] = useState([]);
   const [loadingRounds, setLoadingRounds] = useState(false);
+  const [showReviewModal, setShowReviewModal] = useState(false);
+  const [reviewData, setReviewData] = useState({
+    job_role: '',
+    placement_type: '',
+    offer_status: ''
+  });
+  const [submitLoading, setSubmitLoading] = useState(false);
+  const [submitMessage, setSubmitMessage] = useState('');
 
   useEffect(() => {
     const fetchData = async () => {
@@ -115,6 +123,36 @@ const CompanyDetails = () => {
     });
   };
 
+  const handleReviewSubmit = async (e) => {
+    e.preventDefault();
+    setSubmitLoading(true);
+    setSubmitMessage('');
+    
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.post(
+        `http://localhost:5000/api/reviews/${companyId}`,
+        reviewData,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+      const review_id = response.data.review.review_id;
+
+      setSubmitMessage('Review submitted successfully!');
+      setShowReviewModal(false);
+      setReviewData({ job_role: '', placement_type: '', offer_status: '' });
+      navigate(`/company/${companyId}/review/${review_id}/reviewrounds`);
+    } catch (err) {
+      setSubmitMessage(err.response?.data?.message || 'Failed to submit review.');
+    } finally {
+      setSubmitLoading(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -149,11 +187,16 @@ const CompanyDetails = () => {
       <div className="bg-white border-b border-gray-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
           <button
-            onClick={() => navigate(-1)}
+            onClick={() => {
+              const user = JSON.parse(localStorage.getItem('user'));
+              if (user && user.role) {
+                navigate(`/${user.role}-dashboard`);
+              }
+            }}
             className="mb-6 flex items-center text-gray-600 hover:text-indigo-600 transition-colors"
           >
             <ArrowLeft className="w-4 h-4 mr-1" />
-            <span>Back to companies</span>
+            <span>Back to dashboard</span>
           </button>
           
           <div className="flex flex-col md:flex-row md:items-center md:justify-between">
@@ -202,6 +245,22 @@ const CompanyDetails = () => {
               <span className="bg-green-100 text-green-800 text-xs font-medium px-2.5 py-1 rounded-full">
                 {Object.values(reviewsByRole).flat().length} Reviews
               </span>
+              <button
+                onClick={() => {
+                  const user = JSON.parse(localStorage.getItem('user'));
+                  if (user && user.role === 'alumni') {
+                    // Show review modal if user is alumni
+                    setShowReviewModal(true);
+                  } else {
+                    // Redirect non-alumni to login
+                    navigate('/login/alumni');
+                  }
+                }}
+                className="ml-2 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors flex items-center"
+              >
+                <MessageSquare className="w-4 h-4 mr-2" />
+                Add Review
+              </button>
             </div>
           </div>
         </div>
@@ -367,6 +426,77 @@ const CompanyDetails = () => {
           )}
         </div>
       </div>
+      
+      {/* Review Modal */}
+      {showReviewModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-xl shadow-lg p-8 w-full max-w-md">
+            <h2 className="text-xl font-bold mb-4">Add Review for {company.name}</h2>
+            <form onSubmit={handleReviewSubmit} className="space-y-6">
+              <div>
+                <label className="block text-sm font-semibold mb-2">Job Role</label>
+                <input
+                  type="text"
+                  value={reviewData.job_role}
+                  onChange={e => setReviewData({ ...reviewData, job_role: e.target.value })}
+                  required
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-semibold mb-2">Placement Type</label>
+                <select
+                  value={reviewData.placement_type}
+                  onChange={e => setReviewData({ ...reviewData, placement_type: e.target.value })}
+                  required
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg"
+                >
+                  <option value="">Select type</option>
+                  <option value="on-campus">On Campus</option>
+                  <option value="off-campus">Off Campus</option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-semibold mb-2">Offer Status</label>
+                <select
+                  value={reviewData.offer_status}
+                  onChange={e => setReviewData({ ...reviewData, offer_status: e.target.value })}
+                  required
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg"
+                >
+                  <option value="">Select status</option>
+                  <option value="offer">Offer</option>
+                  <option value="no-offer">No Offer</option>
+                </select>
+              </div>
+              <button
+                type="submit"
+                disabled={submitLoading}
+                className="w-full py-2 px-4 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors"
+              >
+                {submitLoading ? 'Submitting...' : 'Submit Review'}
+              </button>
+            </form>
+            {submitMessage && (
+              <div
+                className={`mt-4 text-center text-sm font-semibold px-4 py-2 rounded-lg transition-all duration-300 ${
+                  submitMessage === 'Review submitted successfully!'
+                    ? 'bg-green-100 text-green-700 border border-green-300 shadow'
+                    : 'bg-red-100 text-red-700 border border-red-300 shadow'
+                }`}
+              >
+                {submitMessage}
+              </div>
+            )}
+            <button
+              onClick={() => setShowReviewModal(false)}
+              className="mt-6 w-full py-2 px-4 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors"
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
