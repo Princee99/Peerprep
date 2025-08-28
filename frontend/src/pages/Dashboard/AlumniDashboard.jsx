@@ -94,7 +94,7 @@ const AlumniDashboard = () => {
     setMessage('');
     try {
       const token = localStorage.getItem('token');
-      await axios.post(
+      const response = await axios.post(
         `http://localhost:5000/api/reviews/${selectedCompany.company_id}`,
         reviewData,
         {
@@ -104,13 +104,14 @@ const AlumniDashboard = () => {
           }
         }
       );
-      const { review_id } = response.data;
+     const review_id = response.data.review.review_id;
+
       setMessage('Review submitted successfully!');
       setShowReviewModal(false);
       setReviewData({ job_role: '', placement_type: '', offer_status: '' });
       navigate(`/company/${selectedCompany.company_id}/review/${review_id}/reviewrounds`);
     } catch (err) {
-      setMessage('Failed to submit review.');
+      setMessage(err.response?.data?.message || 'Failed to submit review.');
     } finally {
       setLoading(false);
     }
@@ -428,10 +429,19 @@ const AlumniDashboard = () => {
                         Share Experience
                         <ChevronRight className="w-4 h-4 ml-1" />
                       </span>
-                      <div className="flex items-center space-x-2 text-xs text-gray-500 opacity-0 group-hover:opacity-100 transition-opacity">
+                      {/* <div className="flex items-center space-x-2 text-xs text-gray-500 opacity-0 group-hover:opacity-100 transition-opacity">
                         <Star className="w-3.5 h-3.5" />
                         <span>Add Review</span>
-                      </div>
+                      </div> */}
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          navigate(`/company/${company.company_id}`);
+                        }}
+                        className="ml-2 px-3 py-1 bg-blue-50 text-blue-700 rounded-lg text-xs font-medium hover:bg-blue-100 transition-colors"
+                      >
+                        View Details
+                      </button>
                     </div>
                   </motion.div>
                 ))}
@@ -469,7 +479,7 @@ const AlumniDashboard = () => {
           </div>
         </motion.div>
 
-        {/* Quick Actions Section */}
+        {/* Quick Actions Section
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -504,7 +514,7 @@ const AlumniDashboard = () => {
               </motion.button>
             </div>
           </div>
-        </motion.div>
+        </motion.div> */}
       </main>
 
       {/* Click outside to close dropdowns */}

@@ -29,7 +29,7 @@ router.post('/login', async (req, res) => {
                 user_id: user.rows[0].user_id,
                 role: user.rows[0].role
             },
-            process.env.JWT_SECRET,
+            process.env.token,
             { expiresIn: "1h" }
         );
 

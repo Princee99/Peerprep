@@ -58,6 +58,25 @@ router.get('/', auth, async (req, res) => {
     }
 });
 
+router.get('/:companyId/reviews', auth, async (req, res) => {
+  try {
+    const { companyId } = req.params;
+    const reviews = await pool.query(
+      `SELECT r.* 
+       FROM reviews r 
+       JOIN users u ON r.alumni_id = u.user_id
+       WHERE r.company_id = $1
+       ORDER BY r.created_at DESC`,
+      [companyId]
+    );
+    
+    res.json(reviews.rows);
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).json({ message: 'Server Error' });
+  }
+});
+
 // Add a new company
 router.post('/', auth, isAdmin,upload.single('logo'),async (req, res) => {
     try {

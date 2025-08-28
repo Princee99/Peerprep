@@ -39,24 +39,42 @@ router.post('/:companyId', auth, async (req, res) => {
 
 // Add a round to a review
 router.post('/:reviewId/rounds', auth, async (req, res) => {
-    const { reviewId } = req.params;
-    const { round_type, description, tips } = req.body;
-    try {
-        // Validate round_type
-        const validRoundTypes = ['aptitude', 'technical', 'hr', 'other'];
-        if (!validRoundTypes.includes(round_type)) {
-            return res.status(400).json({ error: 'Invalid round type.' });
-        }
-        const result = await pool.query(
-            `INSERT INTO review_rounds (review_id, round_type, description, tips)
-             VALUES ($1, $2, $3, $4) RETURNING *`,
-            [reviewId, round_type, description, tips]
-        );
-        res.status(201).json({ message: 'Round added successfully', round: result.rows[0] });
-    } catch (err) {
-        console.error(err.message);
-        res.status(500).json({ message: 'Server Error' });
+  const { reviewId } = req.params;
+  const { round_type, description, tips } = req.body;
+  
+  // Add validation for reviewId
+  if (!reviewId || isNaN(parseInt(reviewId))) {
+    return res.status(400).json({ error: 'Invalid review ID' });
+  }
+
+  try {
+    // Validate round_type
+    const validRoundTypes = ['aptitude', 'technical', 'hr', 'other'];
+    if (!validRoundTypes.includes(round_type)) {
+        return res.status(400).json({ error: 'Invalid round type.' });
     }
+    
+    // Add this check to verify the review exists
+    const reviewExists = await pool.query(
+      'SELECT * FROM reviews WHERE review_id = $1',
+      [parseInt(reviewId)]  // Convert to integer
+    );
+    
+    if (reviewExists.rows.length === 0) {
+      return res.status(404).json({ error: 'Review not found' });
+    }
+    
+    const result = await pool.query(
+      `INSERT INTO review_rounds (review_id, round_type, description, tips)
+       VALUES ($1, $2, $3, $4) RETURNING *`,
+      [parseInt(reviewId), round_type, description, tips]  // Convert to integer
+    );
+    
+    res.json({ success: true, round: result.rows[0] });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Failed to submit round review.' });
+  }
 });
 
 // Get all rounds for a review

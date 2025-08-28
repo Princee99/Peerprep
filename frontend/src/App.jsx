@@ -4,7 +4,7 @@ import Login from './pages/Login';
 import AdminDashboard from './pages/Dashboard/AdminDashboard';
 import StudentDashboard from './pages/Dashboard/StudentDashboard';
 import AlumniDashboard from './pages/Dashboard/AlumniDashboard';
-import CompanyDetail from './pages/CompanyDetail';
+import CompanyDetails from './pages/CompanyDetails';
 import Profile from './pages/Profile';
 import ReviewRounds from './pages/ReviewRounds';
 import './App.css';
@@ -80,7 +80,7 @@ function App() {
             path="/company/:companyId" 
             element={
               <ProtectedRoute>
-                <CompanyDetail />
+                <CompanyDetails />
               </ProtectedRoute>
             } 
           />
@@ -96,7 +96,7 @@ function App() {
           />
           
           <Route 
-            path="/company/:companyId/review/:reviewId" 
+            path="/company/:companyId/review/:reviewId/reviewrounds" 
             element={
               <ProtectedRoute>
                 <ReviewRounds />
