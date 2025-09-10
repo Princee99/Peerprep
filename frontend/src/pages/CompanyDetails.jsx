@@ -4,9 +4,8 @@ import { motion } from 'framer-motion';
 import {
   Building2, MapPin, Globe, Users, Briefcase, Clock, 
   ChevronDown, ChevronUp, Award, MessageSquare, FileText,
-  CheckCircle, XCircle, ArrowLeft, Calendar
+  CheckCircle, XCircle, ArrowLeft, Calendar, Plus // Add Plus icon
 } from 'lucide-react';
-import apiClient from '../services/apiClient';
 
 const CompanyDetails = () => {
   const { companyId } = useParams();
@@ -19,6 +18,42 @@ const CompanyDetails = () => {
   const [selectedReview, setSelectedReview] = useState(null);
   const [rounds, setRounds] = useState([]);
   const [loadingRounds, setLoadingRounds] = useState(false);
+  const [user, setUser] = useState(null); // Add user state
+
+  // Add effect to get user role
+  useEffect(() => {
+    const fetchUserData = async () => {
+      try {
+        const token = localStorage.getItem('token');
+        const userDataString = localStorage.getItem('user');
+        
+        if (userDataString) {
+          const userData = JSON.parse(userDataString);
+          setUser(userData);
+        } else {
+          // If user data isn't in localStorage, fetch it from API
+          const response = await fetch('http://localhost:5000/api/auth/me', {
+            headers: { 'Authorization': `Bearer ${token}` }
+          });
+          
+          if (response.ok) {
+            const userData = await response.json();
+            setUser(userData);
+            localStorage.setItem('user', JSON.stringify(userData));
+          }
+        }
+      } catch (error) {
+        console.error('Error getting user data:', error);
+      }
+    };
+    
+    fetchUserData();
+  }, []);
+
+  // Function to handle clicking the Add Review button
+  const handleAddReview = () => {
+    navigate(`/company/${companyId}/add-review`);
+  };
 
   useEffect(() => {
     const fetchData = async () => {
@@ -202,6 +237,17 @@ const CompanyDetails = () => {
               <span className="bg-green-100 text-green-800 text-xs font-medium px-2.5 py-1 rounded-full">
                 {Object.values(reviewsByRole).flat().length} Reviews
               </span>
+              
+              {/* Add Review button - only for alumni */}
+              {user?.role === 'alumni' && (
+                <button
+                  onClick={handleAddReview}
+                  className="ml-4 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors flex items-center"
+                >
+                  <Plus className="w-4 h-4 mr-1" />
+                  Add Review
+                </button>
+              )}
             </div>
           </div>
         </div>
@@ -367,6 +413,17 @@ const CompanyDetails = () => {
           )}
         </div>
       </div>
+      
+      {/* Floating Add Review button for mobile */}
+      {user?.role === 'alumni' && (
+        <button
+          onClick={handleAddReview}
+          aria-label="Add Review"
+          className="fixed bottom-6 right-6 w-14 h-14 bg-indigo-600 text-white rounded-full shadow-lg flex items-center justify-center hover:bg-indigo-700 transition-colors md:hidden z-50"
+        >
+          <Plus className="w-6 h-6" />
+        </button>
+      )}
     </div>
   );
 };
