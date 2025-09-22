@@ -8,6 +8,9 @@ import CompanyDetails from './pages/CompanyDetails';
 import Profile from './pages/Profile';
 import ReviewRounds from './pages/ReviewRounds';
 import './App.css';
+import AskQuestion from './components/QA/AskQuestion';
+import QuestionList from './components/QA/QuestionList';
+import QuestionDetail from './components/QA/QuestionDetail';
 
 // Protected Route Component
 const ProtectedRoute = ({ children }) => {
@@ -78,11 +81,7 @@ function App() {
           {/* Company Detail Route - Accessible by all authenticated users */}
           <Route 
             path="/company/:companyId" 
-            element={
-              <ProtectedRoute>
-                <CompanyDetails />
-              </ProtectedRoute>
-            } 
+            element={<CompanyDetails />} 
           />
           
           {/* Profile Route - Accessible by all authenticated users */}
@@ -103,6 +102,10 @@ function App() {
               </ProtectedRoute>
             } 
           />
+          <Route path="/ask-question" element={<AskQuestion />} />
+          <Route path="/questions" element={<QuestionList />} />
+          <Route path="/questions/:questionId" element={<QuestionDetail />} />
+          <Route path="/company/:companyId/question/:questionId" element={<QuestionDetail />} />
           <Route path="*" element={<Navigate to="/" />} />
         </Routes>
       </div>

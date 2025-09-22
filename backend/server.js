@@ -9,6 +9,7 @@ app.use('/api/auth', require('./routes/auth'));
 app.use('/api/companies', require('./routes/companies'));
 app.use('/api/email', require('./routes/email'));
 app.use('/api/reviews', require('./routes/reviews'));
+app.use('/api/questions', require('./routes/questions'));
 
 app.use((err, req, res, next) => {
     console.error(err); // This will print the error details
