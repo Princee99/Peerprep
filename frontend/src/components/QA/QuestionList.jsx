@@ -24,8 +24,15 @@ const QuestionList = () => {
         }
       });
       setQuestions(response.data);
+      setError(''); // Clear any previous errors
     } catch (err) {
-      setError('Failed to fetch questions');
+      // If it's a 404 or no questions found, don't show error - just empty array
+      if (err.response?.status === 404) {
+        setQuestions([]);
+        setError('');
+      } else {
+        setError('Failed to fetch questions');
+      }
     } finally {
       setLoading(false);
     }
@@ -130,7 +137,7 @@ const QuestionList = () => {
             <div className="text-center py-12">
               <MessageSquare className="w-16 h-16 text-gray-400 mx-auto mb-4" />
               <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                {searchTerm ? 'No questions found' : 'No questions yet'}
+                {searchTerm ? 'No questions found' : 'No questions added'}
               </h3>
               <p className="text-gray-600 mb-4">
                 {searchTerm 

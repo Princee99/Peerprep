@@ -28,8 +28,15 @@ const CompanyQA = ({ companyName }) => {
         }
       );
       setQuestions(response.data);
+      setError(''); // Clear any previous errors
     } catch (err) {
-      setError('Failed to fetch questions');
+      // If it's a 404 or no questions found, don't show error - just empty array
+      if (err.response?.status === 404) {
+        setQuestions([]);
+        setError('');
+      } else {
+        setError('Failed to fetch questions');
+      }
     } finally {
       setLoading(false);
     }
