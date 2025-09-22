@@ -19,7 +19,8 @@ import {
   ChevronRight,
   TrendingUp,
   Award,
-  Calendar
+  Calendar,
+  MessageCircle
 } from 'lucide-react';
 
 const StudentDashboard = () => {
@@ -474,6 +475,42 @@ const StudentDashboard = () => {
             </div>
           </div>
         </motion.div>
+
+        {/* Additional Quick Actions */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+          <div 
+            onClick={() => navigate('/ask-question')}
+            className="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow cursor-pointer border border-gray-200"
+          >
+            <div className="flex items-center mb-4">
+              <MessageSquare className="w-8 h-8 text-indigo-600 mr-3" />
+              <h3 className="text-lg font-semibold">Ask Question</h3>
+            </div>
+            <p className="text-gray-600">Get help from alumni by asking questions</p>
+          </div>
+
+          <div 
+            onClick={() => navigate('/questions')}
+            className="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow cursor-pointer border border-gray-200"
+          >
+            <div className="flex items-center mb-4">
+              <MessageCircle className="w-8 h-8 text-green-600 mr-3" />
+              <h3 className="text-lg font-semibold">Browse Q&A</h3>
+            </div>
+            <p className="text-gray-600">Browse questions and answers from the community</p>
+          </div>
+        </div>
+
+        {/* My Questions Count */}
+        <div className="bg-white rounded-lg shadow-md p-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-gray-600">My Questions</p>
+              <p className="text-2xl font-bold text-gray-900">5</p>
+            </div>
+            <MessageSquare className="h-8 w-8 text-indigo-600" />
+          </div>
+        </div>
       </main>
 
       {/* Click outside to close dropdowns */}

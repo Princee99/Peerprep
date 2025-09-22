@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Search,
@@ -18,7 +18,8 @@ import {
   Star,
   Target,
   Settings,
-  Filter
+  Filter,
+  MessageSquare
 } from 'lucide-react';
 import useDeleteCompany from '../../hooks/useDeleteCompany';
 import useUpdateCompany from '../../hooks/useUpdateCompany';

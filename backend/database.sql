@@ -1,4 +1,3 @@
-
 CREATE TABLE  IF NOT EXISTS users (
     user_id VARCHAR(20) PRIMARY KEY,
     email VARCHAR(255) UNIQUE NOT NULL,
@@ -18,7 +17,6 @@ CREATE TABLE  IF NOT EXISTS companies (
     created_by VARCHAR(20) REFERENCES users(user_id)
 );
 
-
 CREATE TABLE IF NOT EXISTS reviews (
     review_id SERIAL PRIMARY KEY,
     company_id INT NOT NULL REFERENCES companies(company_id) ON DELETE CASCADE,
@@ -36,3 +34,34 @@ CREATE TABLE IF NOT EXISTS review_rounds (
     description TEXT NOT NULL,
     tips TEXT
 );
+
+-- Questions table
+CREATE TABLE IF NOT EXISTS questions (
+    question_id SERIAL PRIMARY KEY,
+    title VARCHAR(255) NOT NULL,
+    content TEXT NOT NULL,
+    student_id VARCHAR(20) REFERENCES users(user_id),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Answers table
+CREATE TABLE IF NOT EXISTS answers (
+    answer_id SERIAL PRIMARY KEY,
+    question_id INTEGER REFERENCES questions(question_id) ON DELETE CASCADE,
+    content TEXT NOT NULL,
+    alumni_id VARCHAR(20) REFERENCES users(user_id),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Add indexes for better performance
+CREATE INDEX IF NOT EXISTS idx_questions_student_id ON questions(student_id);
+CREATE INDEX IF NOT EXISTS idx_answers_question_id ON answers(question_id);
+CREATE INDEX IF NOT EXISTS idx_answers_alumni_id ON answers(alumni_id);
+
+-- Add company_id column to questions table (CORRECTED)
+ALTER TABLE questions ADD COLUMN company_id INTEGER REFERENCES companies(company_id);
+
+-- Create index for better performance
+CREATE INDEX IF NOT EXISTS idx_questions_company_id ON questions(company_id);

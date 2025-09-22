@@ -17,7 +17,8 @@ import {
   Award,
   Users,
   BookOpen,
-  ChevronRight
+  ChevronRight,
+  MessageCircle
 } from 'lucide-react';
 import axios from 'axios';
 
@@ -479,42 +480,41 @@ const AlumniDashboard = () => {
           </div>
         </motion.div>
 
-        {/* Quick Actions Section
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.6 }}
-          className="mt-8 bg-gradient-to-r from-green-50 to-teal-50 rounded-2xl border border-green-200 p-6"
-        >
+        {/* Quick Actions Section */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+          <div 
+            onClick={() => navigate('/questions')}
+            className="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow cursor-pointer border border-gray-200"
+          >
+            <div className="flex items-center mb-4">
+              <MessageSquare className="w-8 h-8 text-indigo-600 mr-3" />
+              <h3 className="text-lg font-semibold">Answer Questions</h3>
+            </div>
+            <p className="text-gray-600">Help students by answering their questions</p>
+          </div>
+
+          <div 
+            onClick={() => navigate('/questions')}
+            className="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow cursor-pointer border border-gray-200"
+          >
+            <div className="flex items-center mb-4">
+              <MessageCircle className="w-8 h-8 text-green-600 mr-3" />
+              <h3 className="text-lg font-semibold">Browse Q&A</h3>
+            </div>
+            <p className="text-gray-600">View all questions and community discussions</p>
+          </div>
+        </div>
+
+        {/* Add this to show answers provided count */}
+        <div className="bg-white rounded-lg shadow-md p-6">
           <div className="flex items-center justify-between">
             <div>
-              <h3 className="text-xl font-semibold text-gray-900 mb-2">
-                Ready to Help Students? 🚀
-              </h3>
-              <p className="text-gray-600">
-                Your placement experiences can guide the next generation of students.
-              </p>
+              <p className="text-sm font-medium text-gray-600">Answers Provided</p>
+              <p className="text-2xl font-bold text-gray-900">12</p>
             </div>
-            <div className="flex space-x-3">
-              <motion.button
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-                className="px-4 py-2 bg-white border border-gray-300 text-gray-700 text-sm font-medium rounded-xl hover:bg-gray-50 transition-colors"
-              >
-                <BookOpen className="w-4 h-4 mr-2 inline" />
-                View Guidelines
-              </motion.button>
-              <motion.button
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-                className="px-4 py-2 bg-gradient-to-r from-green-600 to-teal-600 text-white text-sm font-medium rounded-xl hover:from-green-700 hover:to-teal-700 transition-all duration-200 shadow-lg"
-              >
-                <Users className="w-4 h-4 mr-2 inline" />
-                Start Contributing
-              </motion.button>
-            </div>
+            <MessageCircle className="h-8 w-8 text-green-600" />
           </div>
-        </motion.div> */}
+        </div>
       </main>
 
       {/* Click outside to close dropdowns */}
