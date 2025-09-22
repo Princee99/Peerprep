@@ -11,6 +11,7 @@ import './App.css';
 import AskQuestion from './components/QA/AskQuestion';
 import QuestionList from './components/QA/QuestionList';
 import QuestionDetail from './components/QA/QuestionDetail';
+import QuestionDetails from './pages/QuestionDetails';
 
 // Protected Route Component
 const ProtectedRoute = ({ children }) => {
@@ -104,7 +105,7 @@ function App() {
           />
           <Route path="/ask-question" element={<AskQuestion />} />
           <Route path="/questions" element={<QuestionList />} />
-          <Route path="/questions/:questionId" element={<QuestionDetail />} />
+          <Route path="/questions/:questionId" element={<QuestionDetails />} />
           <Route path="/company/:companyId/question/:questionId" element={<QuestionDetail />} />
           <Route path="*" element={<Navigate to="/" />} />
         </Routes>

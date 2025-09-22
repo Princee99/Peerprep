@@ -175,12 +175,12 @@ const CompanyQA = ({ companyName }) => {
          questions.map((question) => (
             <div
               key={question.question_id}
-              onClick={() => handleQuestionClick(question.question_id)}
-              className="bg-white rounded-xl border border-gray-200 shadow-md p-6 hover:shadow-lg transition-all cursor-pointer"
+              onClick={() => handleQuestionClick(question.question_id)} // Add this back
+              className="bg-white rounded-xl border border-gray-200 shadow-md p-6 hover:shadow-lg transition-all cursor-pointer" // Add cursor-pointer
             >
               <div className="flex items-start justify-between">
                 <div className="flex-1">
-                  <p className="text-gray-900 mb-4 leading-relaxed">
+                  <p className="text-gray-900 mb-4 leading-relaxed hover:text-indigo-600 transition-colors"> {/* Add hover effect */}
                     {question.content.length > 200 
                       ? `${question.content.substring(0, 200)}...` 
                       : question.content
@@ -188,10 +188,12 @@ const CompanyQA = ({ companyName }) => {
                   </p>
                   
                   <div className="flex items-center space-x-4 text-sm text-gray-500">
-                    <div className="flex items-center">
-                      <User className="w-4 h-4 mr-1" />
-                      <span>{question.student_email}</span>
-                    </div>
+                     {user?.role === 'admin' && question.student_email && (
+                      <div className="flex items-center">
+                        <User className="w-4 h-4 mr-1" />
+                        <span>{question.student_email}</span>
+                      </div>
+                    )}
                     <div className="flex items-center">
                       <Clock className="w-4 h-4 mr-1" />
                       <span>{formatDate(question.created_at)}</span>
@@ -210,6 +212,10 @@ const CompanyQA = ({ companyName }) => {
                       : 'bg-gray-100 text-gray-800'
                   }`}>
                     {parseInt(question.answer_count) > 0 ? 'Answered' : 'Unanswered'}
+                  </div>
+                  {/* Add a visual indicator that it's clickable */}
+                  <div className="text-xs text-indigo-600 mt-1 font-medium">
+                    View Details →
                   </div>
                 </div>
               </div>

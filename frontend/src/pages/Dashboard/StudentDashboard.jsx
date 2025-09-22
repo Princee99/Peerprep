@@ -439,78 +439,7 @@ const StudentDashboard = () => {
           </div>
         </motion.div>
 
-        {/* Quick Actions Section */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.6 }}
-          className="mt-8 bg-gradient-to-r from-indigo-50 to-purple-50 rounded-2xl border border-indigo-200 p-6"
-        >
-          <div className="flex items-center justify-between">
-            <div>
-              <h3 className="text-xl font-semibold text-gray-900 mb-2">
-                Ready for Placements? 🚀
-              </h3>
-              <p className="text-gray-600">
-                Access resources, practice questions, and connect with alumni to boost your preparation.
-              </p>
-            </div>
-            <div className="flex space-x-3">
-              <motion.button
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-                className="px-4 py-2 bg-white border border-gray-300 text-gray-700 text-sm font-medium rounded-xl hover:bg-gray-50 transition-colors"
-              >
-                <BookOpen className="w-4 h-4 mr-2 inline" />
-                Study Materials
-              </motion.button>
-              <motion.button
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-                className="px-4 py-2 bg-gradient-to-r from-indigo-600 to-purple-600 text-white text-sm font-medium rounded-xl hover:from-indigo-700 hover:to-purple-700 transition-all duration-200 shadow-lg"
-              >
-                <Users className="w-4 h-4 mr-2 inline" />
-                Connect Alumni
-              </motion.button>
-            </div>
-          </div>
-        </motion.div>
-
-        {/* Additional Quick Actions */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-          <div 
-            onClick={() => navigate('/ask-question')}
-            className="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow cursor-pointer border border-gray-200"
-          >
-            <div className="flex items-center mb-4">
-              <MessageSquare className="w-8 h-8 text-indigo-600 mr-3" />
-              <h3 className="text-lg font-semibold">Ask Question</h3>
-            </div>
-            <p className="text-gray-600">Get help from alumni by asking questions</p>
-          </div>
-
-          <div 
-            onClick={() => navigate('/questions')}
-            className="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow cursor-pointer border border-gray-200"
-          >
-            <div className="flex items-center mb-4">
-              <MessageCircle className="w-8 h-8 text-green-600 mr-3" />
-              <h3 className="text-lg font-semibold">Browse Q&A</h3>
-            </div>
-            <p className="text-gray-600">Browse questions and answers from the community</p>
-          </div>
-        </div>
-
-        {/* My Questions Count */}
-        <div className="bg-white rounded-lg shadow-md p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-gray-600">My Questions</p>
-              <p className="text-2xl font-bold text-gray-900">5</p>
-            </div>
-            <MessageSquare className="h-8 w-8 text-indigo-600" />
-          </div>
-        </div>
+      
       </main>
 
       {/* Click outside to close dropdowns */}
