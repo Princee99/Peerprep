@@ -17,7 +17,8 @@ import {
   MapPin,
   Calendar,
   Award,
-  Loader2
+  Loader2,
+  School
 } from 'lucide-react';
 
 const Profile = () => {
@@ -26,41 +27,65 @@ const Profile = () => {
   const [isEditing, setIsEditing] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
+  const [message, setMessage] = useState({ type: '', text: '' });
   const [formData, setFormData] = useState({
     name: '',
     email: '',
     phone: '',
     department: '',
-    graduationYear: '',
-    currentCompany: '',
+    college_name: '',
+    graduation_year: '',
+    current_company: '',
     designation: '',
     bio: ''
   });
 
   useEffect(() => {
-    const userData = localStorage.getItem('user');
-    if (!userData) {
-      navigate('/login');
-      return;
-    }
-
-    const userObj = JSON.parse(userData);
-    setUser(userObj);
-    
-    // Initialize form data with user info
-    setFormData({
-      name: userObj.name || '',
-      email: userObj.email || '',
-      phone: userObj.phone || '',
-      department: userObj.department || '',
-      graduationYear: userObj.graduationYear || '',
-      currentCompany: userObj.currentCompany || '',
-      designation: userObj.designation || '',
-      bio: userObj.bio || ''
-    });
-    
-    setIsLoading(false);
+    fetchUserProfile();
   }, [navigate]);
+
+  const fetchUserProfile = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        navigate('/login');
+        return;
+      }
+
+      const response = await fetch('http://localhost:5000/api/profile', {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch profile');
+      }
+
+      const data = await response.json();
+      setUser(data.user);
+      
+      // Initialize form data
+      setFormData({
+        name: data.user.name || '',
+        email: data.user.email || '',
+        phone: data.user.phone || '',
+        department: data.user.department || '',
+        college_name: data.user.college_name || '',
+        graduation_year: data.user.graduation_year || '',
+        current_company: data.user.current_company || '',
+        designation: data.user.designation || '',
+        bio: data.user.bio || ''
+      });
+      
+    } catch (error) {
+      console.error('Error fetching profile:', error);
+      setMessage({ type: 'error', text: 'Failed to load profile' });
+      navigate('/login');
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -72,19 +97,41 @@ const Profile = () => {
 
   const handleSave = async () => {
     setIsSaving(true);
+    setMessage({ type: '', text: '' });
+    
     try {
-      // Simulate API call to update profile
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      const token = localStorage.getItem('token');
       
-      // Update local storage with new data
-      const updatedUser = { ...user, ...formData };
-      localStorage.setItem('user', JSON.stringify(updatedUser));
-      setUser(updatedUser);
+      const response = await fetch('http://localhost:5000/api/profile', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify(formData)
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || 'Failed to update profile');
+      }
+
+      // Update local storage and state
+      localStorage.setItem('user', JSON.stringify(data.user));
+      setUser(data.user);
       
       setIsEditing(false);
-      // You can add a toast notification here instead of alert
+      setMessage({ type: 'success', text: 'Profile updated successfully!' });
+      
+      // Clear message after 3 seconds
+      setTimeout(() => {
+        setMessage({ type: '', text: '' });
+      }, 3000);
+      
     } catch (error) {
       console.error('Error updating profile:', error);
+      setMessage({ type: 'error', text: error.message });
     } finally {
       setIsSaving(false);
     }
@@ -188,6 +235,26 @@ const Profile = () => {
         </div>
       </motion.header>
 
+      {/* Message Display */}
+      <AnimatePresence>
+        {message.text && (
+          <motion.div
+            initial={{ opacity: 0, y: -50 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -50 }}
+            className="fixed top-20 left-1/2 transform -translate-x-1/2 z-50"
+          >
+            <div className={`px-6 py-3 rounded-lg shadow-lg ${
+              message.type === 'success' 
+                ? 'bg-green-100 text-green-800 border border-green-200' 
+                : 'bg-red-100 text-red-800 border border-red-200'
+            }`}>
+              {message.text}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* Main Content */}
       <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <motion.div
@@ -200,31 +267,19 @@ const Profile = () => {
             whileHover={{ y: -2 }}
             className="relative overflow-hidden rounded-3xl bg-white/70 backdrop-blur-xl border border-white/20 shadow-2xl"
           >
-            {/* Gradient Background */}
             <div className={`absolute inset-0 bg-gradient-to-br ${roleColors.header} opacity-5`} />
             
             <div className="relative p-8">
               <div className="flex flex-col sm:flex-row items-center sm:items-start space-y-6 sm:space-y-0 sm:space-x-8">
-                {/* Avatar */}
                 <div className="relative">
                   <motion.div
                     whileHover={{ scale: 1.05 }}
                     className={`w-32 h-32 rounded-2xl ${roleColors.avatar} flex items-center justify-center shadow-2xl relative overflow-hidden`}
                   >
                     <User className="w-16 h-16 text-white" />
-                    {isEditing && (
-                      <motion.button
-                        whileHover={{ scale: 1.1 }}
-                        whileTap={{ scale: 0.9 }}
-                        className="absolute bottom-2 right-2 w-10 h-10 bg-black/20 hover:bg-black/30 backdrop-blur-sm text-white rounded-full flex items-center justify-center transition-all duration-200"
-                      >
-                        <Camera className="w-5 h-5" />
-                      </motion.button>
-                    )}
                   </motion.div>
                 </div>
 
-                {/* User Info */}
                 <div className="flex-1 text-center sm:text-left">
                   <h2 className="text-3xl font-bold text-slate-900 mb-3">
                     {user?.name || 'User Name'}
@@ -243,9 +298,9 @@ const Profile = () => {
 
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-center">
                     <div className="bg-white/60 backdrop-blur-sm rounded-xl p-4 border border-white/20">
-                      <Calendar className="w-6 h-6 text-blue-600 mx-auto mb-2" />
-                      <p className="text-sm text-slate-600 font-medium">Member Since</p>
-                      <p className="text-lg font-bold text-slate-900">2024</p>
+                      <School className="w-6 h-6 text-blue-600 mx-auto mb-2" />
+                      <p className="text-sm text-slate-600 font-medium">College</p>
+                      <p className="text-lg font-bold text-slate-900">{formData.college_name || 'N/A'}</p>
                     </div>
                     
                     <div className="bg-white/60 backdrop-blur-sm rounded-xl p-4 border border-white/20">
@@ -257,7 +312,7 @@ const Profile = () => {
                     <div className="bg-white/60 backdrop-blur-sm rounded-xl p-4 border border-white/20">
                       <Award className="w-6 h-6 text-purple-600 mx-auto mb-2" />
                       <p className="text-sm text-slate-600 font-medium">Year</p>
-                      <p className="text-lg font-bold text-slate-900">{formData.graduationYear || 'N/A'}</p>
+                      <p className="text-lg font-bold text-slate-900">{formData.graduation_year || 'N/A'}</p>
                     </div>
                   </div>
                 </div>
@@ -341,21 +396,36 @@ const Profile = () => {
                   className="w-full px-4 py-3 bg-white/80 backdrop-blur-sm border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-slate-100 disabled:text-slate-600 transition-all duration-200"
                 >
                   <option value="">Select Department</option>
-                  <option value="IT">Information Technology</option>
-                  <option value="CS">Computer Science</option>
-                  <option value="CE">Computer Engineering</option>
-                  <option value="AIML">AI & Machine Learning</option>
-                  <option value="ECE">Electronics & Communication</option>
-                  <option value="ME">Mechanical Engineering</option>
+                  <option value="Information Technology">Information Technology</option>
+                  <option value="Computer Science">Computer Science</option>
+                  <option value="Computer Engineering">Computer Engineering</option>
+                  <option value="AI & Machine Learning">AI & Machine Learning</option>
+                  <option value="Electronics & Communication">Electronics & Communication</option>
+                  <option value="Mechanical Engineering">Mechanical Engineering</option>
+                  <option value="Civil Engineering">Civil Engineering</option>
+                  <option value="Electrical Engineering">Electrical Engineering</option>
                 </select>
               </div>
+
+              <div className="space-y-2">
+                <label className="block text-sm font-semibold text-slate-700">College Name</label>
+                <input
+                  type="text"
+                  name="college_name"
+                  value={formData.college_name}
+                  onChange={handleChange}
+                  disabled={!isEditing}
+                  placeholder="Enter your college name"
+                  className="w-full px-4 py-3 bg-white/80 backdrop-blur-sm border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-slate-100 disabled:text-slate-600 transition-all duration-200"
+                />
+              </div>
               
-              <div className="space-y-2 md:col-span-2">
+              <div className="space-y-2">
                 <label className="block text-sm font-semibold text-slate-700">Graduation Year</label>
                 <input
                   type="number"
-                  name="graduationYear"
-                  value={formData.graduationYear}
+                  name="graduation_year"
+                  value={formData.graduation_year}
                   onChange={handleChange}
                   disabled={!isEditing}
                   min="2000"
@@ -387,8 +457,8 @@ const Profile = () => {
                     <label className="block text-sm font-semibold text-slate-700">Current Company</label>
                     <input
                       type="text"
-                      name="currentCompany"
-                      value={formData.currentCompany}
+                      name="current_company"
+                      value={formData.current_company}
                       onChange={handleChange}
                       disabled={!isEditing}
                       placeholder="Enter your current company"
@@ -478,11 +548,13 @@ const Profile = () => {
                       email: user?.email || '',
                       phone: user?.phone || '',
                       department: user?.department || '',
-                      graduationYear: user?.graduationYear || '',
-                      currentCompany: user?.currentCompany || '',
+                      college_name: user?.college_name || '',
+                      graduation_year: user?.graduation_year || '',
+                      current_company: user?.current_company || '',
                       designation: user?.designation || '',
                       bio: user?.bio || ''
                     });
+                    setMessage({ type: '', text: '' });
                   }}
                   className="flex items-center justify-center space-x-2 px-8 py-4 bg-white/80 backdrop-blur-sm text-slate-700 border border-slate-200 rounded-xl hover:bg-white transition-all duration-200 shadow-lg hover:shadow-xl"
                 >

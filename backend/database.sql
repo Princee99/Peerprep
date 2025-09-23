@@ -65,3 +65,13 @@ ALTER TABLE questions ADD COLUMN company_id INTEGER REFERENCES companies(company
 
 -- Create index for better performance
 CREATE INDEX IF NOT EXISTS idx_questions_company_id ON questions(company_id);
+
+--modify user table
+ALTER TABLE users ADD COLUMN IF NOT EXISTS name VARCHAR(255);
+ALTER TABLE users ADD COLUMN IF NOT EXISTS phone VARCHAR(20);
+ALTER TABLE users ADD COLUMN IF NOT EXISTS department VARCHAR(100);
+ALTER TABLE users ADD COLUMN IF NOT EXISTS college_name VARCHAR(255);
+ALTER TABLE users ADD COLUMN IF NOT EXISTS graduation_year INTEGER;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS current_company VARCHAR(255);
+ALTER TABLE users ADD COLUMN IF NOT EXISTS designation VARCHAR(255);
+ALTER TABLE users ADD COLUMN IF NOT EXISTS bio TEXT;
