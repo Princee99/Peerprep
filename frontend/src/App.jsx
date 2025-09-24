@@ -12,6 +12,7 @@ import AskQuestion from './components/QA/AskQuestion';
 import QuestionList from './components/QA/QuestionList';
 import QuestionDetail from './components/QA/QuestionDetail';
 import QuestionDetails from './pages/QuestionDetails';
+import AdminSettings from './pages/AdminSettings';
 
 // Protected Route Component
 const ProtectedRoute = ({ children }) => {
@@ -58,6 +59,9 @@ function App() {
               </DashboardRoute>
             } 
           />
+          <Route 
+            path="/admin/settings" 
+            element={<AdminSettings />} /> 
           
           {/* Student Routes */}
           <Route 
@@ -66,7 +70,7 @@ function App() {
               <DashboardRoute expectedRole="student">
                 <StudentDashboard />
               </DashboardRoute>
-            } 
+            }
           />
           
           {/* Alumni Routes */}

@@ -1,0 +1,6 @@
+{
+  "watch": ["routes", "config", "middleware", "utils", "server.js"],
+  "ignore": ["data/**/*", "uploads/**/*", "temp/**/*", "*.xlsx", "*.json"],
+  "ext": "js,json",
+  "delay": 1000
+}
