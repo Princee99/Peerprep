@@ -17,6 +17,33 @@ module.exports = (req, res, next) => {
     next();
   } catch (err) {
     console.error('Auth middleware error:', err);
-    res.status(401).json({ message: 'Token is not valid' });
+    
+    if (err.name === 'TokenExpiredError') {
+      return res.status(401).json({ 
+        message: 'Token has expired',
+        error: 'TOKEN_EXPIRED',
+        expiredAt: err.expiredAt
+      });
+    }
+    
+    if (err.name === 'JsonWebTokenError') {
+      return res.status(401).json({ 
+        message: 'Invalid token format',
+        error: 'INVALID_TOKEN'
+      });
+    }
+    
+    if (err.name === 'NotBeforeError') {
+      return res.status(401).json({ 
+        message: 'Token not yet valid',
+        error: 'TOKEN_NOT_ACTIVE'
+      });
+    }
+    
+    // Generic fallback for other JWT errors
+    res.status(401).json({ 
+      message: 'Token is not valid',
+      error: 'TOKEN_INVALID'
+    });
   }
 };

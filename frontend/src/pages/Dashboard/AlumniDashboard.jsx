@@ -38,7 +38,7 @@ const AlumniDashboard = () => {
   });
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState('');
-
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
   useEffect(() => {
     // Check if user is logged in and is alumni
     const token = localStorage.getItem('token');
@@ -78,8 +78,15 @@ const AlumniDashboard = () => {
     }
   };
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    setIsLoggingOut(true);
+    setShowUserDropdown(false); // Close dropdown immediately
+    
+    // Show loading for 3 seconds
+    await new Promise(resolve => setTimeout(resolve, 3000));
+    
     localStorage.removeItem('token');
+    localStorage.removeItem('refreshToken'); // Remove refresh token if you're using it
     localStorage.removeItem('user');
     navigate('/');
   };
@@ -105,14 +112,15 @@ const AlumniDashboard = () => {
           }
         }
       );
-     const review_id = response.data.review.review_id;
+      const review_id = response.data.review.review_id;
 
       setMessage('Review submitted successfully!');
       setShowReviewModal(false);
       setReviewData({ job_role: '', placement_type: '', offer_status: '' });
       navigate(`/company/${selectedCompany.company_id}/review/${review_id}/reviewrounds`);
     } catch (err) {
-      setMessage(err.response?.data?.message || 'Failed to submit review.');
+      console.error('Review submission error:', err);
+      setMessage(err.response?.data?.error || err.response?.data?.message || 'Failed to submit review.');
     } finally {
       setLoading(false);
     }
@@ -186,6 +194,44 @@ const AlumniDashboard = () => {
 
   return (
     <div className="min-h-screen bg-gray-50 transition-colors duration-200">
+
+      {/* Loading Overlay for Logout */}
+      {isLoggingOut && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="bg-white rounded-2xl shadow-xl p-8 flex flex-col items-center space-y-6 max-w-sm mx-4"
+          >
+            <div className="relative">
+              <motion.div
+                animate={{ rotate: 360 }}
+                transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                className="w-16 h-16 border-4 border-red-200 border-t-red-600 rounded-full"
+              />
+              <div className="absolute inset-0 flex items-center justify-center">
+                <LogOut className="w-6 h-6 text-red-600" />
+              </div>
+            </div>
+            <div className="text-center">
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                Logging out...
+              </h3>
+              <p className="text-sm text-gray-600">
+                Thank you for using PeerPrep!
+              </p>
+            </div>
+            <motion.div 
+              initial={{ width: "0%" }}
+              animate={{ width: "100%" }}
+              transition={{ duration: 3, ease: "linear" }}
+              className="w-full bg-gray-200 rounded-full h-2 overflow-hidden"
+            >
+              <div className="w-full h-full bg-gradient-to-r from-red-500 to-red-600 rounded-full" />
+            </motion.div>
+          </motion.div>
+        </div>
+      )}
       {/* Sticky Header */}
       <motion.header
         initial={{ y: -100 }}
@@ -214,10 +260,13 @@ const AlumniDashboard = () => {
             <div className="flex items-center space-x-4">
               {/* User Dropdown */}
               <div className="relative">
-                <motion.button
+                 <motion.button
                   whileHover={{ scale: 1.02 }}
                   onClick={() => setShowUserDropdown(!showUserDropdown)}
-                  className="flex items-center space-x-3 p-2 rounded-lg hover:bg-gray-100 transition-colors"
+                  disabled={isLoggingOut}
+                  className={`flex items-center space-x-3 p-2 rounded-lg hover:bg-gray-100 transition-colors ${
+                    isLoggingOut ? 'opacity-50 cursor-not-allowed' : ''
+                  }`}
                 >
                   <div className="w-8 h-8 bg-gradient-to-r from-green-600 to-teal-600 rounded-full flex items-center justify-center">
                     <span className="text-white text-sm font-semibold">
@@ -233,7 +282,7 @@ const AlumniDashboard = () => {
                 </motion.button>
 
                 <AnimatePresence>
-                  {showUserDropdown && (
+                  {showUserDropdown && !isLoggingOut && (
                     <motion.div
                       initial={{ opacity: 0, scale: 0.95, y: -10 }}
                       animate={{ opacity: 1, scale: 1, y: 0 }}
@@ -257,6 +306,7 @@ const AlumniDashboard = () => {
                       <hr className="my-2 border-gray-200" />
                       <button
                         onClick={handleLogout}
+                         disabled={isLoggingOut}
                         className="flex items-center w-full px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors"
                       >
                         <LogOut className="w-4 h-4 mr-3" />

@@ -7,14 +7,26 @@ const reviewController = require('../controllers/reviewController');
 // Add a review for a company (only alumni)
 router.post('/:companyId', auth, async (req, res) => {
     try {
+        console.log('Review submission request:', {
+            companyId: req.params.companyId,
+            userId: req.user.userId,
+            userRole: req.user.role,
+            body: req.body
+        });
+
         const { job_role, placement_type, offer_status } = req.body;
         const companyId = req.params.companyId;
-        const userId = req.user.user_id;
+        const userId = req.user.userId;
         const userRole = req.user.role;
 
         // Only alumni can add reviews
         if (userRole !== 'alumni') {
             return res.status(403).json({ error: 'Only alumni can add reviews.' });
+        }
+
+        // Validate required fields
+        if (!job_role || !placement_type || !offer_status) {
+            return res.status(400).json({ error: 'All fields are required.' });
         }
 
         // Validate placement_type and offer_status
@@ -24,6 +36,12 @@ router.post('/:companyId', auth, async (req, res) => {
             return res.status(400).json({ error: 'Invalid placement type or offer status.' });
         }
 
+        // Check if company exists
+        const companyExists = await pool.query('SELECT * FROM companies WHERE company_id = $1', [companyId]);
+        if (companyExists.rows.length === 0) {
+            return res.status(404).json({ error: 'Company not found.' });
+        }
+
         // Insert review
         const result = await pool.query(
             `INSERT INTO reviews (company_id, alumni_id, job_role, placement_type, offer_status)
@@ -31,9 +49,11 @@ router.post('/:companyId', auth, async (req, res) => {
             [companyId, userId, job_role, placement_type, offer_status]
         );
 
+        console.log('Review created successfully:', result.rows[0]);
         res.status(201).json({ message: 'Review added successfully', review: result.rows[0] });
     } catch (err) {
-        res.status(500).json({ error: 'Failed to add review' });
+        console.error('Database error:', err);
+        res.status(500).json({ error: 'Failed to add review: ' + err.message });
     }
 });
 
