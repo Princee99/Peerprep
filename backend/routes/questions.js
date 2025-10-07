@@ -125,7 +125,7 @@ router.post('/:id/answers', auth, async (req, res) => {
     const { id } = req.params;
     const { content } = req.body;
     const userId = req.user.user_id;
-    const userRole = req.user.role;
+    const userRole = req.user.role;""
     
     if (userRole !== 'alumni') {
       return res.status(403).json({ message: 'Only alumni can answer questions' });

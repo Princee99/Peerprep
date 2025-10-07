@@ -1,4 +1,4 @@
-const nodemailer = require('nodemailer');
+ const nodemailer = require('nodemailer');
 
 // Create transporter (configure with your email provider)
 const transporter = nodemailer.createTransport({
@@ -79,20 +79,16 @@ const sendCredentialEmail = async (recipientEmail, password, role) => {
                             <ul style="color: #4b5563; font-size: 14px; line-height: 1.6; margin: 0; padding-left: 20px;">
                                 ${role === 'student' 
                                     ? `
-                                        <li style="margin: 8px 0;">Connect with alumni from your field of interest</li>
+                                        <li style="margin: 8px 0;">Connect with alumni</li>
                                         <li style="margin: 8px 0;">Get company reviews and interview experiences</li>
-                                        <li style="margin: 8px 0;">Access placement preparation resources</li>
-                                        <li style="margin: 8px 0;">Join placement discussion forums</li>
-                                        <li style="margin: 8px 0;">Get mentorship from industry professionals</li>
-                                        <li style="margin: 8px 0;">Stay updated with placement opportunities</li>
+                                        <li style="margin: 8px 0;">Ask questions and seek guidance</li>
                                     `
                                     : `
                                         <li style="margin: 8px 0;">Share your company experience and reviews</li>
-                                        <li style="margin: 8px 0;">Mentor students from your department</li>
                                         <li style="margin: 8px 0;">Provide interview tips and guidance</li>
                                         <li style="margin: 8px 0;">Share industry insights and trends</li>
-                                        <li style="margin: 8px 0;">Help students with placement preparation</li>
-                                        <li style="margin: 8px 0;">Post job opportunities from your company</li>
+                                        <li style="margin: 8px 0;">Give answers to students' doubts</li>
+                        
                                     `
                                 }
                             </ul>
