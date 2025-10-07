@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import { ArrowLeft, MessageCircle, Clock, User, Plus } from 'lucide-react';
+import { ArrowLeft, MessageCircle, Clock, User, Plus, X } from 'lucide-react';
 
 const QuestionDetails = () => {
   const { questionId } = useParams();
@@ -9,10 +9,15 @@ const QuestionDetails = () => {
   const [questionData, setQuestionData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [showAnswerForm, setShowAnswerForm] = useState(false);
+  const [answerContent, setAnswerContent] = useState('');
+  const [submitting, setSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState('');
   const user = JSON.parse(localStorage.getItem('user'));
 
   useEffect(() => {
     fetchQuestionDetails();
+    // eslint-disable-next-line
   }, [questionId]);
 
   const fetchQuestionDetails = async () => {
@@ -29,6 +34,48 @@ const QuestionDetails = () => {
       setError('Failed to fetch question details');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleAddAnswer = () => {
+    setShowAnswerForm(true);
+    setAnswerContent('');
+    setSubmitError('');
+  };
+
+  const handleCancelAnswer = () => {
+    setShowAnswerForm(false);
+    setAnswerContent('');
+    setSubmitError('');
+  };
+
+  const handleAnswerSubmit = async (e) => {
+    e.preventDefault();
+    setSubmitting(true);
+    setSubmitError('');
+    try {
+      const token = localStorage.getItem('token');
+      await axios.post(
+        `http://localhost:5000/api/questions/${questionId}/answers`,
+        { content: answerContent },
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+      setShowAnswerForm(false);
+      setAnswerContent('');
+      fetchQuestionDetails(); // Refresh answers
+    } catch (err) {
+      setSubmitError(
+        err.response?.data?.error ||
+        err.response?.data?.message ||
+        'Failed to submit answer.'
+      );
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -104,9 +151,55 @@ const QuestionDetails = () => {
 
         {/* Answers */}
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-          <h2 className="text-lg font-bold text-gray-900 mb-6">
-            Answers ({questionData.answers.length})
-          </h2>
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-lg font-bold text-gray-900">
+              Answers ({questionData.answers.length})
+            </h2>
+            {(user?.role === 'alumni' || user?.role === 'admin') && !showAnswerForm && (
+              <button
+                onClick={handleAddAnswer}
+                className="inline-flex items-center px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors"
+              >
+                <Plus className="w-4 h-4 mr-2" />
+                Add Answer
+              </button>
+            )}
+          </div>
+
+          {/* Add Answer Form */}
+          {showAnswerForm && (
+            <form onSubmit={handleAnswerSubmit} className="mb-8 bg-gray-50 p-4 rounded-lg border border-gray-200">
+              <textarea
+                value={answerContent}
+                onChange={e => setAnswerContent(e.target.value)}
+                required
+                rows={4}
+                className="w-full p-3 border border-gray-300 rounded-lg mb-3"
+                placeholder="Write your answer here..."
+                disabled={submitting}
+              />
+              {submitError && (
+                <div className="text-red-600 mb-2">{submitError}</div>
+              )}
+              <div className="flex space-x-2">
+                <button
+                  type="submit"
+                  disabled={submitting || !answerContent.trim()}
+                  className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors"
+                >
+                  {submitting ? 'Submitting...' : 'Submit Answer'}
+                </button>
+                <button
+                  type="button"
+                  onClick={handleCancelAnswer}
+                  disabled={submitting}
+                  className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors"
+                >
+                  <X className="w-4 h-4 mr-1 inline" /> Cancel
+                </button>
+              </div>
+            </form>
+          )}
 
           {questionData.answers.length === 0 ? (
             <div className="text-center py-8">

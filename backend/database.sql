@@ -38,7 +38,6 @@ CREATE TABLE IF NOT EXISTS review_rounds (
 -- Questions table
 CREATE TABLE IF NOT EXISTS questions (
     question_id SERIAL PRIMARY KEY,
-    title VARCHAR(255) NOT NULL,
     content TEXT NOT NULL,
     student_id VARCHAR(20) REFERENCES users(user_id),
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,

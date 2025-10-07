@@ -586,7 +586,7 @@ const AlumniDashboard = () => {
                 disabled={loading}
                 className="w-full py-2 px-4 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
               >
-                {loading ? 'Submitting...' : 'Submit Review'}
+                {loading ? 'Submitting...' : 'Next'}
               </button>
             </form>
             {message && (
