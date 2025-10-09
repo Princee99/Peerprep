@@ -17,6 +17,7 @@ app.use('/api/reviews', require('./routes/reviews'));
 app.use('/api/questions', require('./routes/questions'));
 app.use('/api/profile', require('./routes/profile'));
 app.use('/api/admin', require('./routes/admin')); // Add this line
+app.use('/api/stats', require('./routes/stats'));
 
 app.use((err, req, res, next) => {
     console.error(err); // This will print the error details

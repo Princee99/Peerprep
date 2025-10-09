@@ -31,6 +31,8 @@ const AdminDashboard = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [showAddCompany, setShowAddCompany] = useState(false);
   const [companies, setCompanies] = useState([]);
+  const [showFilters, setShowFilters] = useState(false);
+  const [selectedLocation, setSelectedLocation] = useState('');
   const [isAddingCompany, setIsAddingCompany] = useState(false);
   const [showUserDropdown, setShowUserDropdown] = useState(false);
   const { deleteCompany, loading: deleteLoading, error: deleteError, success: deleteSuccess } = useDeleteCompany();
@@ -140,45 +142,48 @@ const AdminDashboard = () => {
     }));
   };
 
-  const filteredCompanies = companies.filter(company =>
-    company.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    company.location.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filteredCompanies = companies
+    .filter(company =>
+      company.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      company.location.toLowerCase().includes(searchTerm.toLowerCase())
+    )
+    .filter(company => selectedLocation ? company.location === selectedLocation : true);
+
+  const uniqueLocations = Array.from(new Set(companies.map(c => c.location))).sort();
 
   // Stats data
+  const [overview, setOverview] = useState({
+    totalCompanies: 0,
+    totalReviews: 0,
+    totalQuestions: 0,
+    totalAnswers: 0,
+    totalStudents: 0,
+    totalAlumni: 0
+  });
+
+  useEffect(() => {
+    const fetchOverview = async () => {
+      try {
+        const token = localStorage.getItem('token');
+        const res = await fetch('http://localhost:5000/api/stats/overview', {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (res.ok) {
+          const data = await res.json();
+          setOverview(data);
+        }
+      } catch (e) {
+        console.error('Failed to load stats overview', e);
+      }
+    };
+    fetchOverview();
+  }, []);
+
   const stats = [
-    {
-      title: 'Total Companies',
-      value: companies.length.toString(),
-      change: '+12%',
-      changeType: 'positive',
-      icon: Building2,
-      color: 'blue'
-    },
-    {
-      title: 'Active Reviews',
-      value: '284',
-      change: '+5%',
-      changeType: 'positive',
-      icon: Star,
-      color: 'yellow'
-    },
-    {
-      title: 'Student Participation',
-      value: '1,247',
-      change: '+18%',
-      changeType: 'positive',
-      icon: Users,
-      color: 'green'
-    },
-    {
-      title: 'Success Rate',
-      value: '78%',
-      change: '+3%',
-      changeType: 'positive',
-      icon: Target,
-      color: 'purple'
-    }
+    { title: 'Total Companies', value: String(overview.totalCompanies), change: '', changeType: 'positive', icon: Building2, color: 'blue' },
+    { title: 'Total Reviews', value: String(overview.totalReviews), change: '', changeType: 'positive', icon: Star, color: 'yellow' },
+    { title: 'Questions', value: String(overview.totalQuestions), change: '', changeType: 'positive', icon: MessageSquare, color: 'green' },
+    { title: 'Answers', value: String(overview.totalAnswers), change: '', changeType: 'positive', icon: Users, color: 'purple' }
   ];
 
   const getStatColor = (color) => {
@@ -392,13 +397,49 @@ const AdminDashboard = () => {
               </div>
               <motion.button
                 whileHover={{ scale: 1.02 }}
+                onClick={() => setShowFilters(v => !v)}
                 className="inline-flex items-center px-4 py-2.5 bg-white border border-gray-300 text-gray-700 text-sm font-medium rounded-xl hover:bg-gray-50 transition-colors"
               >
                 <Filter className="w-4 h-4 mr-2" />
-                Filter
+                {showFilters ? 'Hide Filters' : 'Filter'}
               </motion.button>
             </div>
           </div>
+          {showFilters && (
+            <div className="px-6 py-4 border-b border-gray-200 bg-white">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 items-end">
+                <div>
+                  <label className="block text-sm font-semibold mb-2">Location</label>
+                  <select
+                    value={selectedLocation}
+                    onChange={e => setSelectedLocation(e.target.value)}
+                    className="w-full px-3 py-2 bg-white border border-gray-300 rounded-xl text-gray-900"
+                  >
+                    <option value="">All locations</option>
+                    {uniqueLocations.map(loc => (
+                      <option key={loc} value={loc}>{loc}</option>
+                    ))}
+                  </select>
+                </div>
+                <div className="flex space-x-2">
+                  <motion.button
+                    whileHover={{ scale: 1.02 }}
+                    onClick={() => setShowFilters(false)}
+                    className="px-4 py-2 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-colors"
+                  >
+                    Apply
+                  </motion.button>
+                  <motion.button
+                    whileHover={{ scale: 1.02 }}
+                    onClick={() => { setSelectedLocation(''); setShowFilters(false); }}
+                    className="px-4 py-2 bg-gray-100 text-gray-700 rounded-xl hover:bg-gray-200 transition-colors"
+                  >
+                    Clear
+                  </motion.button>
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* Companies Grid */}
           <div className="p-6">
@@ -420,7 +461,7 @@ const AdminDashboard = () => {
                           <img
                             src={`http://localhost:5000${company.logo_url}`}
                             alt={company.name}
-                            className="w-12 h-12 rounded-xl object-cover"
+                            className="w-12 h-12 rounded-xl bg-white p-1 object-contain"
                           />
                         ) : (
                           <div className="w-12 h-12 bg-gradient-to-r from-blue-500 to-purple-600 rounded-xl flex items-center justify-center">

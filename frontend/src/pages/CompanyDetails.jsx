@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import {
   Building2, MapPin, Globe, Users, Briefcase, Clock, 
@@ -9,8 +9,16 @@ import {
 import axios from 'axios';
 import CompanyQA from '../components/QA/CompanyQA';
 
+const roundTypes = [
+  { value: 'aptitude', label: 'Aptitude' },
+  { value: 'technical', label: 'Technical' },
+  { value: 'hr', label: 'HR' },
+  { value: 'other', label: 'Other' }
+];
+
 const CompanyDetails = () => {
   const { companyId } = useParams();
+  const location = useLocation();
   const navigate = useNavigate();
   const [company, setCompany] = useState(null);
   const [reviewsByRole, setReviewsByRole] = useState({});
@@ -18,7 +26,7 @@ const CompanyDetails = () => {
   const [error, setError] = useState(null);
   const [expandedReviews, setExpandedReviews] = useState({});
   const [selectedReview, setSelectedReview] = useState(null);
-  const [rounds, setRounds] = useState([]);
+  const [reviewRounds, setReviewRounds] = useState([]);
   const [loadingRounds, setLoadingRounds] = useState(false);
   const [showReviewModal, setShowReviewModal] = useState(false);
   const [reviewData, setReviewData] = useState({
@@ -26,9 +34,28 @@ const CompanyDetails = () => {
     placement_type: '',
     offer_status: ''
   });
+  const [rounds, setRounds] = useState([]);
+  const [currentRound, setCurrentRound] = useState({
+    round_type: '',
+    description: '',
+    tips: ''
+  });
   const [submitLoading, setSubmitLoading] = useState(false);
   const [submitMessage, setSubmitMessage] = useState('');
-  const [activeTab, setActiveTab] = useState('reviews'); // Add this line
+  const [activeTab, setActiveTab] = useState('reviews'); // default
+
+  // Initialize tab from query param if present
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const tab = params.get('tab');
+    if (tab === 'questions' || tab === 'reviews') {
+      setActiveTab(tab);
+    }
+    const openReview = params.get('openReview');
+    if (openReview === '1') {
+      setShowReviewModal(true);
+    }
+  }, [location.search]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -108,7 +135,7 @@ const CompanyDetails = () => {
       }
       
       const data = await response.json();
-      setRounds(data);
+      setReviewRounds(data);
     } catch (err) {
       console.error('Error fetching review rounds:', err);
     } finally {
@@ -125,6 +152,18 @@ const CompanyDetails = () => {
     });
   };
 
+  // Helper functions for managing rounds
+  const addRound = () => {
+    if (currentRound.round_type && currentRound.description) {
+      setRounds([...rounds, { ...currentRound }]);
+      setCurrentRound({ round_type: '', description: '', tips: '' });
+    }
+  };
+
+  const removeRound = (index) => {
+    setRounds(rounds.filter((_, i) => i !== index));
+  };
+
   const handleReviewSubmit = async (e) => {
     e.preventDefault();
     setSubmitLoading(true);
@@ -133,8 +172,11 @@ const CompanyDetails = () => {
     try {
       const token = localStorage.getItem('token');
       const response = await axios.post(
-        `http://localhost:5000/api/reviews/${companyId}`,
-        reviewData,
+        `http://localhost:5000/api/reviews/${companyId}/complete`,
+        {
+          ...reviewData,
+          rounds: rounds
+        },
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -142,14 +184,17 @@ const CompanyDetails = () => {
           }
         }
       );
-      const review_id = response.data.review.review_id;
 
-      setSubmitMessage('Review submitted successfully!');
+      setSubmitMessage('Review and rounds submitted successfully!');
       setShowReviewModal(false);
       setReviewData({ job_role: '', placement_type: '', offer_status: '' });
-      navigate(`/company/${companyId}/review/${review_id}/reviewrounds`);
+      setRounds([]);
+      setCurrentRound({ round_type: '', description: '', tips: '' });
+      
+      // Refresh the page to show the new review
+      window.location.reload();
     } catch (err) {
-      setSubmitMessage(err.response?.data?.message || 'Failed to submit review.');
+      setSubmitMessage(err.response?.data?.error || 'Failed to submit review.');
     } finally {
       setSubmitLoading(false);
     }
@@ -207,7 +252,7 @@ const CompanyDetails = () => {
                 <img
                   src={`http://localhost:5000${company.logo_url}`}
                   alt={company.name}
-                  className="w-16 h-16 rounded-xl object-cover"
+                  className="w-16 h-16 rounded-xl bg-white p-1 object-contain"
                 />
               ) : (
                 <div className="w-16 h-16 bg-gradient-to-r from-indigo-500 to-purple-600 rounded-xl flex items-center justify-center">
@@ -417,13 +462,13 @@ const CompanyDetails = () => {
                   <div className="flex justify-center py-8">
                     <div className="w-8 h-8 border-2 border-indigo-200 border-t-indigo-600 rounded-full animate-spin"/>
                   </div>
-                ) : rounds.length === 0 ? (
+                ) : reviewRounds.length === 0 ? (
                   <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 text-sm text-yellow-800">
                     No round details available for this review.
                   </div>
                 ) : (
                   <div className="space-y-6">
-                    {rounds.map((round) => (
+                    {reviewRounds.map((round) => (
                       <div key={round.round_id} className="border border-gray-200 rounded-lg p-4">
                         <h4 className="font-semibold text-indigo-700 capitalize mb-2">
                           {round.round_type} Round
@@ -467,58 +512,158 @@ const CompanyDetails = () => {
       
       {/* Review Modal */}
       {showReviewModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-xl shadow-lg p-8 w-full max-w-md">
-            <h2 className="text-xl font-bold mb-4">Add Review for {company.name}</h2>
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl shadow-lg p-8 w-full max-w-4xl max-h-[90vh] overflow-y-auto">
+            <h2 className="text-xl font-bold mb-6">Add Complete Review for {company.name}</h2>
+            
             <form onSubmit={handleReviewSubmit} className="space-y-6">
-              <div>
-                <label className="block text-sm font-semibold mb-2">Job Role</label>
-                <input
-                  type="text"
-                  value={reviewData.job_role}
-                  onChange={e => setReviewData({ ...reviewData, job_role: e.target.value })}
-                  required
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg"
-                />
+              {/* Review Basic Info */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                  <label className="block text-sm font-semibold mb-2">Job Role</label>
+                  <input
+                    type="text"
+                    value={reviewData.job_role}
+                    onChange={e => setReviewData({ ...reviewData, job_role: e.target.value })}
+                    required
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg"
+                    placeholder="e.g., Software Engineer"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-semibold mb-2">Placement Type</label>
+                  <select
+                    value={reviewData.placement_type}
+                    onChange={e => setReviewData({ ...reviewData, placement_type: e.target.value })}
+                    required
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg"
+                  >
+                    <option value="">Select type</option>
+                    <option value="on-campus">On Campus</option>
+                    <option value="off-campus">Off Campus</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-semibold mb-2">Offer Status</label>
+                  <select
+                    value={reviewData.offer_status}
+                    onChange={e => setReviewData({ ...reviewData, offer_status: e.target.value })}
+                    required
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg"
+                  >
+                    <option value="">Select status</option>
+                    <option value="offer">Offer</option>
+                    <option value="no-offer">No Offer</option>
+                  </select>
+                </div>
               </div>
-              <div>
-                <label className="block text-sm font-semibold mb-2">Placement Type</label>
-                <select
-                  value={reviewData.placement_type}
-                  onChange={e => setReviewData({ ...reviewData, placement_type: e.target.value })}
-                  required
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg"
+
+              {/* Interview Rounds Section */}
+              <div className="border-t pt-6">
+                <h3 className="text-lg font-semibold mb-4">Interview Rounds</h3>
+                
+                {/* Add Round Form */}
+                <div className="bg-gray-50 p-4 rounded-lg mb-4">
+                  <h4 className="font-medium mb-3">Add New Round</h4>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                    <div>
+                      <label className="block text-sm font-semibold mb-2">Round Type</label>
+                      <select
+                        value={currentRound.round_type}
+                        onChange={e => setCurrentRound({ ...currentRound, round_type: e.target.value })}
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg"
+                      >
+                        <option value="">Select round</option>
+                        {roundTypes.map(r => (
+                          <option key={r.value} value={r.value}>{r.label}</option>
+                        ))}
+                      </select>
+                    </div>
+                    <div className="md:col-span-2">
+                      <label className="block text-sm font-semibold mb-2">Description</label>
+                      <textarea
+                        value={currentRound.description}
+                        onChange={e => setCurrentRound({ ...currentRound, description: e.target.value })}
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg"
+                        rows={2}
+                        placeholder="Describe your interview experience..."
+                      />
+                    </div>
+                  </div>
+                  <div className="mb-4">
+                    <label className="block text-sm font-semibold mb-2">Tips (optional)</label>
+                    <textarea
+                      value={currentRound.tips}
+                      onChange={e => setCurrentRound({ ...currentRound, tips: e.target.value })}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg"
+                      rows={2}
+                      placeholder="Any tips for other students..."
+                    />
+                  </div>
+                  <button
+                    type="button"
+                    onClick={addRound}
+                    disabled={!currentRound.round_type || !currentRound.description}
+                    className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:bg-gray-400"
+                  >
+                    Add Round
+                  </button>
+                </div>
+
+                {/* Added Rounds List */}
+                {rounds.length > 0 && (
+                  <div className="space-y-3">
+                    <h4 className="font-medium">Added Rounds ({rounds.length})</h4>
+                    {rounds.map((round, index) => (
+                      <div key={index} className="bg-white border border-gray-200 rounded-lg p-4">
+                        <div className="flex justify-between items-start">
+                          <div className="flex-1">
+                            <div className="font-semibold capitalize text-blue-700">
+                              {roundTypes.find(r => r.value === round.round_type)?.label} Round
+                            </div>
+                            <p className="mt-1 text-gray-700">{round.description}</p>
+                            {round.tips && (
+                              <p className="mt-2 text-sm text-green-700">
+                                <span className="font-medium">Tips:</span> {round.tips}
+                              </p>
+                            )}
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => removeRound(index)}
+                            className="ml-4 px-2 py-1 bg-red-100 text-red-700 rounded hover:bg-red-200 transition-colors"
+                          >
+                            Remove
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              <div className="flex space-x-4 pt-4">
+                <button
+                  type="submit"
+                  disabled={submitLoading || rounds.length === 0}
+                  className="flex-1 py-2 px-4 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors disabled:bg-gray-400"
                 >
-                  <option value="">Select type</option>
-                  <option value="on-campus">On Campus</option>
-                  <option value="off-campus">Off Campus</option>
-                </select>
-              </div>
-              <div>
-                <label className="block text-sm font-semibold mb-2">Offer Status</label>
-                <select
-                  value={reviewData.offer_status}
-                  onChange={e => setReviewData({ ...reviewData, offer_status: e.target.value })}
-                  required
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg"
+                  {submitLoading ? 'Submitting...' : 'Submit Complete Review'}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setShowReviewModal(false)}
+                  className="px-6 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors"
                 >
-                  <option value="">Select status</option>
-                  <option value="offer">Offer</option>
-                  <option value="no-offer">No Offer</option>
-                </select>
+                  Cancel
+                </button>
               </div>
-              <button
-                type="submit"
-                disabled={submitLoading}
-                className="w-full py-2 px-4 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors"
-              >
-                {submitLoading ? 'Submitting...' : 'Submit Review'}
-              </button>
             </form>
+            
             {submitMessage && (
               <div
                 className={`mt-4 text-center text-sm font-semibold px-4 py-2 rounded-lg transition-all duration-300 ${
-                  submitMessage === 'Review submitted successfully!'
+                  submitMessage === 'Review and rounds submitted successfully!'
                     ? 'bg-green-100 text-green-700 border border-green-300 shadow'
                     : 'bg-red-100 text-red-700 border border-red-300 shadow'
                 }`}
@@ -526,12 +671,6 @@ const CompanyDetails = () => {
                 {submitMessage}
               </div>
             )}
-            <button
-              onClick={() => setShowReviewModal(false)}
-              className="mt-6 w-full py-2 px-4 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors"
-            >
-              Cancel
-            </button>
           </div>
         </div>
       )}

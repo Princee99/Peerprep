@@ -117,7 +117,14 @@ const QuestionDetails = () => {
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header */}
         <button
-          onClick={() => navigate(-1)}
+          onClick={() => {
+            const companyId = questionData?.question?.company_id;
+            if (companyId) {
+              navigate(`/company/${companyId}?tab=questions`);
+            } else {
+              navigate(-1);
+            }
+          }}
           className="mb-6 flex items-center text-gray-600 hover:text-indigo-600 transition-colors"
         >
           <ArrowLeft className="w-4 h-4 mr-1" />

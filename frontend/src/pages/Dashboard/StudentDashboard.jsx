@@ -29,6 +29,8 @@ const StudentDashboard = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [companies, setCompanies] = useState([]);
+  const [showFilters, setShowFilters] = useState(false);
+  const [selectedLocation, setSelectedLocation] = useState('');
   const [showUserDropdown, setShowUserDropdown] = useState(false);
 
   useEffect(() => {
@@ -80,45 +82,35 @@ const StudentDashboard = () => {
     navigate(`/company/${companyId}`);
   };
 
-  const filteredCompanies = companies.filter(company =>
-    company.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    company.location.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filteredCompanies = companies
+    .filter(company =>
+      company.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      company.location.toLowerCase().includes(searchTerm.toLowerCase())
+    )
+    .filter(company => selectedLocation ? company.location === selectedLocation : true);
+
+  const uniqueLocations = Array.from(new Set(companies.map(c => c.location))).sort();
 
   // Student-specific stats
+  const [overview, setOverview] = useState({ totalCompanies: 0, totalReviews: 0, totalQuestions: 0 });
+  useEffect(() => {
+    const fetchOverview = async () => {
+      try {
+        const token = localStorage.getItem('token');
+        const res = await fetch('http://localhost:5000/api/stats/overview', { headers: { 'Authorization': `Bearer ${token}` } });
+        if (res.ok) {
+          const data = await res.json();
+          setOverview(data);
+        }
+      } catch (e) {}
+    };
+    fetchOverview();
+  }, []);
+
   const studentStats = [
-    {
-      title: 'Companies Available',
-      value: companies.length.toString(),
-      description: 'Explore placement opportunities',
-      icon: Building2,
-      color: 'blue',
-      gradient: 'from-blue-500 to-blue-600'
-    },
-    {
-      title: 'Alumni Reviews',
-      value: '150+',
-      description: 'Real placement experiences',
-      icon: Star,
-      color: 'yellow',
-      gradient: 'from-yellow-500 to-yellow-600'
-    },
-    {
-      title: 'Interview Questions',
-      value: '500+',
-      description: 'Practice questions available',
-      icon: MessageSquare,
-      color: 'green',
-      gradient: 'from-green-500 to-green-600'
-    },
-    {
-      title: 'Success Rate',
-      value: '85%',
-      description: 'Students placed last year',
-      icon: Target,
-      color: 'purple',
-      gradient: 'from-purple-500 to-purple-600'
-    }
+    { title: 'Companies Available', value: String(overview.totalCompanies), description: 'Explore placement opportunities', icon: Building2, color: 'blue', gradient: 'from-blue-500 to-blue-600' },
+    { title: 'Alumni Reviews', value: String(overview.totalReviews), description: 'Real placement experiences', icon: Star, color: 'yellow', gradient: 'from-yellow-500 to-yellow-600' },
+    { title: 'Interview Questions', value: String(overview.totalQuestions), description: 'Practice questions available', icon: MessageSquare, color: 'green', gradient: 'from-green-500 to-green-600' }
   ];
 
   const getStatColor = (color) => {
@@ -323,13 +315,49 @@ const StudentDashboard = () => {
               </div>
               <motion.button
                 whileHover={{ scale: 1.02 }}
+                onClick={() => setShowFilters(v => !v)}
                 className="inline-flex items-center px-4 py-2.5 bg-white border border-gray-300 text-gray-700 text-sm font-medium rounded-xl hover:bg-gray-50 transition-colors"
               >
                 <Filter className="w-4 h-4 mr-2" />
-                Filter
+                {showFilters ? 'Hide Filters' : 'Filter'}
               </motion.button>
             </div>
           </div>
+          {showFilters && (
+            <div className="px-6 py-4 border-b border-gray-200 bg-white">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 items-end">
+                <div>
+                  <label className="block text-sm font-semibold mb-2">Location</label>
+                  <select
+                    value={selectedLocation}
+                    onChange={e => setSelectedLocation(e.target.value)}
+                    className="w-full px-3 py-2 bg-white border border-gray-300 rounded-xl text-gray-900"
+                  >
+                    <option value="">All locations</option>
+                    {uniqueLocations.map(loc => (
+                      <option key={loc} value={loc}>{loc}</option>
+                    ))}
+                  </select>
+                </div>
+                <div className="flex space-x-2">
+                  <motion.button
+                    whileHover={{ scale: 1.02 }}
+                    onClick={() => setShowFilters(false)}
+                    className="px-4 py-2 bg-indigo-600 text-white rounded-xl hover:bg-indigo-700 transition-colors"
+                  >
+                    Apply
+                  </motion.button>
+                  <motion.button
+                    whileHover={{ scale: 1.02 }}
+                    onClick={() => { setSelectedLocation(''); setShowFilters(false); }}
+                    className="px-4 py-2 bg-gray-100 text-gray-700 rounded-xl hover:bg-gray-200 transition-colors"
+                  >
+                    Clear
+                  </motion.button>
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* Companies Grid */}
           <div className="p-6">
@@ -351,7 +379,7 @@ const StudentDashboard = () => {
                           <img
                             src={`http://localhost:5000${company.logo_url}`}
                             alt={company.name}
-                            className="w-12 h-12 rounded-xl object-cover"
+                            className="w-12 h-12 rounded-xl bg-white p-1 object-contain"
                           />
                         ) : (
                           <div className="w-12 h-12 bg-gradient-to-r from-indigo-500 to-purple-600 rounded-xl flex items-center justify-center">

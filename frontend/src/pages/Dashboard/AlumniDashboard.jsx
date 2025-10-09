@@ -28,6 +28,8 @@ const AlumniDashboard = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [companies, setCompanies] = useState([]);
+  const [showFilters, setShowFilters] = useState(false);
+  const [selectedLocation, setSelectedLocation] = useState('');
   const [showUserDropdown, setShowUserDropdown] = useState(false);
   const [showReviewModal, setShowReviewModal] = useState(false);
   const [selectedCompany, setSelectedCompany] = useState(null);
@@ -92,8 +94,7 @@ const AlumniDashboard = () => {
   };
 
   const handleCompanyClick = (company) => {
-    setSelectedCompany(company);
-    setShowReviewModal(true);
+    navigate(`/company/${company.company_id}`);
   };
 
   const handleReviewSubmit = async (e) => {
@@ -126,45 +127,38 @@ const AlumniDashboard = () => {
     }
   };
 
-  const filteredCompanies = companies.filter(company =>
-    company.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    company.location.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filteredCompanies = companies
+    .filter(company =>
+      company.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      company.location.toLowerCase().includes(searchTerm.toLowerCase())
+    )
+    .filter(company =>
+      selectedLocation ? company.location === selectedLocation : true
+    );
+
+  const uniqueLocations = Array.from(new Set(companies.map(c => c.location))).sort();
 
   // Stats data for alumni contributions
+  const [alumniStats, setAlumniStats] = useState({ reviewsGiven: 0, companiesReviewed: 0 });
+  useEffect(() => {
+    const loadStats = async () => {
+      try {
+        const token = localStorage.getItem('token');
+        const res = await fetch('http://localhost:5000/api/profile/stats', { headers: { 'Authorization': `Bearer ${token}` } });
+        const json = await res.json();
+        if (json?.success) {
+          setAlumniStats(json.stats || {});
+        }
+      } catch (e) {
+        // ignore
+      }
+    };
+    loadStats();
+  }, []);
+
   const contributionStats = [
-    {
-      title: 'Reviews Added',
-      value: '0',
-      description: 'Start sharing your experiences!',
-      icon: Star,
-      color: 'blue',
-      gradient: 'from-blue-500 to-blue-600'
-    },
-    {
-      title: 'Questions Answered',
-      value: '0',
-      description: 'Help students with their questions!',
-      icon: MessageSquare,
-      color: 'green',
-      gradient: 'from-green-500 to-green-600'
-    },
-    {
-      title: 'Companies Reviewed',
-      value: '0',
-      description: 'Share your placement experiences!',
-      icon: Building2,
-      color: 'purple',
-      gradient: 'from-purple-500 to-purple-600'
-    },
-    {
-      title: 'Impact Score',
-      value: '0',
-      description: 'Your contribution to community!',
-      icon: Award,
-      color: 'orange',
-      gradient: 'from-orange-500 to-orange-600'
-    }
+    { title: 'Reviews Added', value: String(alumniStats.reviewsGiven || 0), description: 'Start sharing your experiences!', icon: Star, color: 'blue', gradient: 'from-blue-500 to-blue-600' },
+    { title: 'Companies Reviewed', value: String(alumniStats.companiesReviewed || 0), description: 'Share your placement experiences!', icon: Building2, color: 'purple', gradient: 'from-purple-500 to-purple-600' }
   ];
 
   const getStatColor = (color) => {
@@ -411,13 +405,49 @@ const AlumniDashboard = () => {
               </div>
               <motion.button
                 whileHover={{ scale: 1.02 }}
+                onClick={() => setShowFilters(v => !v)}
                 className="inline-flex items-center px-4 py-2.5 bg-white border border-gray-300 text-gray-700 text-sm font-medium rounded-xl hover:bg-gray-50 transition-colors"
               >
                 <Filter className="w-4 h-4 mr-2" />
-                Filter
+                {showFilters ? 'Hide Filters' : 'Filter'}
               </motion.button>
             </div>
           </div>
+          {showFilters && (
+            <div className="px-6 py-4 border-b border-gray-200 bg-white">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 items-end">
+                <div>
+                  <label className="block text-sm font-semibold mb-2">Location</label>
+                  <select
+                    value={selectedLocation}
+                    onChange={e => setSelectedLocation(e.target.value)}
+                    className="w-full px-3 py-2 bg-white border border-gray-300 rounded-xl text-gray-900"
+                  >
+                    <option value="">All locations</option>
+                    {uniqueLocations.map(loc => (
+                      <option key={loc} value={loc}>{loc}</option>
+                    ))}
+                  </select>
+                </div>
+                <div className="flex space-x-2">
+                  <motion.button
+                    whileHover={{ scale: 1.02 }}
+                    onClick={() => setShowFilters(false)}
+                    className="px-4 py-2 bg-green-600 text-white rounded-xl hover:bg-green-700 transition-colors"
+                  >
+                    Apply
+                  </motion.button>
+                  <motion.button
+                    whileHover={{ scale: 1.02 }}
+                    onClick={() => { setSelectedLocation(''); setShowFilters(false); }}
+                    className="px-4 py-2 bg-gray-100 text-gray-700 rounded-xl hover:bg-gray-200 transition-colors"
+                  >
+                    Clear
+                  </motion.button>
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* Companies Grid */}
           <div className="p-6">
@@ -439,7 +469,7 @@ const AlumniDashboard = () => {
                           <img
                             src={`http://localhost:5000${company.logo_url}`}
                             alt={company.name}
-                            className="w-12 h-12 rounded-xl object-cover"
+                            className="w-12 h-12 rounded-xl bg-white p-1 object-contain"
                           />
                         ) : (
                           <div className="w-12 h-12 bg-gradient-to-r from-green-500 to-teal-600 rounded-xl flex items-center justify-center">
@@ -476,20 +506,22 @@ const AlumniDashboard = () => {
                     </div>
 
                     <div className="flex items-center justify-between mt-4 pt-4 border-t border-gray-200">
-                      <span className="text-sm text-green-600 font-medium opacity-0 group-hover:opacity-100 transition-all duration-200 flex items-center">
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          navigate(`/company/${company.company_id}?openReview=1`);
+                        }}
+                        className="text-sm text-green-600 font-medium opacity-0 group-hover:opacity-100 transition-all duration-200 flex items-center hover:underline"
+                      >
                         Share Experience
                         <ChevronRight className="w-4 h-4 ml-1" />
-                      </span>
-                      {/* <div className="flex items-center space-x-2 text-xs text-gray-500 opacity-0 group-hover:opacity-100 transition-opacity">
-                        <Star className="w-3.5 h-3.5" />
-                        <span>Add Review</span>
-                      </div> */}
+                      </button>
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
                           navigate(`/company/${company.company_id}`);
                         }}
-                        className="ml-2 px-3 py-1 bg-blue-50 text-blue-700 rounded-lg text-xs font-medium hover:bg-blue-100 transition-colors"
+                        className="ml-2 px-3 py-1 bg-blue-50 text-blue-700 rounded-lg text-xs font-medium opacity-0 group-hover:opacity-100 hover:bg-blue-100 transition-colors"
                       >
                         View Details
                       </button>
