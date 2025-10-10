@@ -10,7 +10,8 @@ module.exports = (req, res, next) => {
 
     const decoded = jwt.verify(token, process.env.token);
     req.user = {
-      userId: decoded.user_id,
+      user_id: decoded.user_id, // Changed from userId to user_id to maintain consistency
+      userId: decoded.user_id,  // Keep both for backward compatibility
       role: decoded.role
     };
     

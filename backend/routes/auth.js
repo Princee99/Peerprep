@@ -31,7 +31,7 @@ router.post('/login', async (req, res) => {
                 role: user.rows[0].role
             },
             process.env.token,
-            { expiresIn: "1h" }
+            { expiresIn: "7d" } // Extended to 7 days for better user experience
         );
 
         res.json({ 
@@ -52,7 +52,7 @@ router.post('/login', async (req, res) => {
 // Add this route to get current user details with all fields
 router.get('/me', auth, async (req, res) => {
   try {
-    const userId = req.user.userId;
+    const userId = req.user.user_id; // Changed from userId to user_id for consistency
 
     const query = `
       SELECT 
@@ -90,6 +90,67 @@ router.get('/me', auth, async (req, res) => {
 
   } catch (error) {
     console.error('Error fetching user details:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Internal server error'
+    });
+  }
+});
+
+// Reset password for logged-in users (authenticated password change)
+router.post('/reset-password-auth', auth, async (req, res) => {
+  try {
+    const { currentPassword, newPassword } = req.body;
+    const userId = req.user.user_id;
+
+    // Validate request
+    if (!currentPassword || !newPassword) {
+      return res.status(400).json({
+        success: false,
+        message: 'Current password and new password are required'
+      });
+    }
+
+    // Get user from database
+    const userResult = await pool.query(
+      'SELECT * FROM users WHERE user_id = $1',
+      [userId]
+    );
+
+    if (userResult.rows.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: 'User not found'
+      });
+    }
+
+    const user = userResult.rows[0];
+
+    // Verify current password
+    const isValidPassword = await bcrypt.compare(currentPassword, user.password);
+    if (!isValidPassword) {
+      return res.status(401).json({
+        success: false,
+        message: 'Current password is incorrect'
+      });
+    }
+
+    // Hash new password
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(newPassword, salt);
+
+    // Update password in database
+    await pool.query(
+      'UPDATE users SET password = $1 WHERE user_id = $2',
+      [hashedPassword, userId]
+    );
+
+    res.json({
+      success: true,
+      message: 'Password updated successfully'
+    });
+  } catch (error) {
+    console.error('Error resetting password:', error);
     res.status(500).json({
       success: false,
       message: 'Internal server error'

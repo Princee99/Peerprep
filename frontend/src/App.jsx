@@ -13,6 +13,8 @@ import QuestionList from './components/QA/QuestionList';
 import QuestionDetail from './components/QA/QuestionDetail';
 import QuestionDetails from './pages/QuestionDetails';
 import AdminSettings from './pages/AdminSettings';
+import StudentSettings from './pages/StudentSettings';
+import AlumniSettings from './pages/AlumniSettings';
 
 // Protected Route Component
 const ProtectedRoute = ({ children }) => {
@@ -72,6 +74,14 @@ function App() {
               </DashboardRoute>
             }
           />
+          <Route 
+            path="/student/settings" 
+            element={
+              <DashboardRoute expectedRole="student">
+                <StudentSettings />
+              </DashboardRoute>
+            }
+          />
           
           {/* Alumni Routes */}
           <Route 
@@ -79,6 +89,14 @@ function App() {
             element={
               <DashboardRoute expectedRole="alumni">
                 <AlumniDashboard />
+              </DashboardRoute>
+            } 
+          />
+          <Route 
+            path="/alumni/settings" 
+            element={
+              <DashboardRoute expectedRole="alumni">
+                <AlumniSettings />
               </DashboardRoute>
             } 
           />

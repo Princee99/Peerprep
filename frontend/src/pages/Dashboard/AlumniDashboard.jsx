@@ -291,7 +291,10 @@ const AlumniDashboard = () => {
                         Profile
                       </button>
                       <button
-                        onClick={() => setShowUserDropdown(false)}
+                        onClick={() => {
+                          setShowUserDropdown(false);
+                          navigate('/alumni/settings');
+                        }}
                         className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
                       >
                         <Settings className="w-4 h-4 mr-3" />
